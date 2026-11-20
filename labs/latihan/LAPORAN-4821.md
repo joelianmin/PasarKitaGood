@@ -32,8 +32,8 @@ Halaman profil toko (`GET /api/sellers/{id}/profile`) melambat dari puluhan mili
 | 2 | k6, kondisi menyala, 2 req/detik | **12,5% gagal** (39 dari 311), p50 1,96 s, p95 40,0 s: laptop jenuh, angka ini mengukur antrean | run 19.32.01 WIB |
 | 3 | k6, kondisi menyala, 1 req/detik | 0 dari 180 gagal, p50 613 ms, p95 1,67 s, p99 2,56 s | run 19.37.22 WIB |
 | 4 | Prometheus, panel "p95 per endpoint" (UTC) | p95 profil 15 sampai 20 ms pada 12.16 sampai 12.19 UTC, lalu 11,7 s pada 12.20 dan 1,7 sampai 3,5 s pada 12.21 sampai 12.31 UTC; p95 katalog tetap 21 sampai 121 ms | query `histogram_quantile(0.95, ...)` dashboard "PasarKita Overview" |
-| 5 | Prometheus, panel "CPU proses" | 1 sampai 3% sebelum 12.19 UTC, 16 sampai 35% sesudahnya (traffic latar) | `process_cpu_usage` |
-| 6 | `ps`, CPU proses aplikasi selama k6 | kondisi mati 1 sampai 6%; menyala 1 req/detik 62 sampai 93%; menyala 2 req/detik sampai 339,5% | sampel tiap 8 detik |
+| 5 | Prometheus, panel "CPU proses" | 1 sampai 3% sebelum 12.19 UTC, 16 sampai 35% sesudahnya (traffic latar). Satuan: bagian dari **seluruh** CPU mesin, 4 thread = 100% | `process_cpu_usage` |
+| 6 | `ps`, CPU proses aplikasi selama k6 | kondisi mati 1 sampai 6%; menyala 1 req/detik 62 sampai 93%; menyala 2 req/detik sampai 339,5%. Satuan: **per core**, 4 thread = 400% | sampel tiap 8 detik |
 | 7 | `curl`, 10 request berurutan | kondisi mati: penjual 1 median 6 ms, penjual 2 7 ms, penjual 77 9 ms. Menyala: penjual 1 **1.403 ms**, penjual 2 665 ms, penjual 77 592 ms | sesudah run 3 |
 | 8 | `pg_stat_statements`, 10 request ke penjual 1 | 2 query per request: `seller` 0,038 ms dan `product` (`findTop60...`) 0,241 ms; plus `feature_flag` 2 kali dalam 10 request | sesudah run 3 |
 | 9 | Database | `feature_flag`: `seller.dynamic-thumbnail = t` | `select name, enabled from feature_flag` |
