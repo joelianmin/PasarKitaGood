@@ -1,0 +1,299 @@
+# Bagian 7: Menyerahkan hasil
+
+*Git, bukti, dan BASELINE.md*
+
+> **Tujuan.** Mengemas hasil Lab 0 menjadi pull request dengan bukti yang sah dan catatan baseline yang bisa diperiksa orang lain.  
+> **Prasyarat.** Bagian 4 (hasil pengukuran) dan 6.1 (jika perlu mendiagnosa sebelum mengumpulkan).  
+> **Setelah bagian ini kamu bisa:**
+> - membuat repo kelompok dari templat dan mengundang anggota serta pengajar
+> - memakai Git untuk cabang, commit, dan pull request
+> - membuat file bukti yang sah dengan urutan yang benar
+> - menulis `BASELINE.md` dengan temuan yang dipisahkan dari tafsiran
+> - memahami mengapa kata sandi dan token tidak boleh masuk riwayat, dan mengapa riwayat tidak ditimpa
+
+---
+
+## 7.1 Membuat repo kelompok
+
+Hasil lab dikumpulkan di **repo milik kelompokmu**, bukan di repo pengajar. Repo ini dibuat
+dari repo templat PasarKita, sehingga isinya sama tetapi terpisah dan bisa dibuat privat.
+
+Satu anggota membuat repo, anggota lain diundang.
+
+1. Buka halaman templat di GitHub (tautannya diberikan pengajar) dan klik
+   **Use this template**, lalu **Create a new repository**.
+2. Pilih pemilik (akun salah satu anggota) dan beri nama, misalnya
+   `pasarkita-kelompok-<nomor>`. Pilih **Private**. Repo publik membuat `BASELINE.md` dan
+   hasil kelompokmu bisa dibaca kelompok lain.
+3. Undang anggota kelompok **dan pengajar** sebagai *collaborator* dengan hak tulis:
+   *Settings*, *Collaborators*, *Add people*. Akun pengajar diberikan di kelas.
+4. Clone repo ke laptopmu:
+
+   ```bash
+   git clone git@github.com:<akun>/pasarkita-kelompok-<nomor>.git
+   cd pasarkita-kelompok-<nomor>
+   ```
+
+5. Isi seed kelompok di `group.env` dengan nilai dari pengajar, lalu commit sebagai commit
+   pertama kelompok:
+
+   ```bash
+   # ubah baris GROUP_SEED=... di group.env
+   git add group.env
+   git commit -m "Isi GROUP_SEED kelompok"
+   git push
+   ```
+
+6. Kerjakan tiap lab di **cabang sendiri** (misalnya `lab0`) dan buka PR dari cabang itu ke
+   `main` **di repo kelompokmu**. Alurnya ada di 7.3.
+
+Dengan GitHub CLI, langkah 1 sampai 4 menjadi satu perintah:
+
+```bash
+gh repo create <akun>/pasarkita-kelompok-<nomor> --template <akun-pengajar>/PasarKita --private --clone
+```
+
+**Hal yang perlu diperhatikan**
+
+- **Jangan mengubah `GROUP_SEED` setelah commit pertama.** Hash bukti memuat seed ini, jadi
+  mengubahnya membuat bukti yang sudah ada tidak cocok lagi dengan data yang kamu ukur.
+- **Templat tidak terhubung ke repo asalnya.** Jika pengajar mengumumkan pembaruan, salin
+  berkas yang berubah ke repo kelompokmu, lalu commit.
+- **File bukti tidak ikut commit** (`labs/*/out/` diabaikan Git). Lampirkan ke PR, lihat 7.4.
+- Pengajar menyimpan daftar seed tiap kelompok. Pakai seed yang diberikan, bukan buatan sendiri.
+
+> Cek diri: kenapa repo kelompok dibuat privat, dan apa yang terjadi pada bukti bila seed
+> diubah setelah pengukuran?
+
+---
+
+## 7.2 Git yang dipakai di lab
+
+Git menyimpan riwayat perubahan sebagai deretan **commit**. Tiga area yang perlu kamu
+bedakan: *working tree* (file yang kamu edit), *staging* (perubahan yang akan masuk commit
+berikutnya), dan *repository* (commit yang sudah tersimpan).
+
+| Tujuan | Perintah |
+| --- | --- |
+| Lihat apa yang berubah | `git status` |
+| Lihat isi perubahan | `git diff` (belum di-stage), `git diff --staged` (sudah di-stage) |
+| Buat cabang kerja | `git switch -c lab0-baseline` |
+| Pilih file untuk commit | `git add BASELINE.md` (hindari `git add .` tanpa melihat `git status`) |
+| Simpan commit | `git commit -m "Lab 0: catatan baseline"` |
+| Lihat riwayat | `git log --oneline -10` |
+| Batalkan perubahan satu file yang belum di-commit | `git restore <file>` |
+| Keluarkan file dari staging | `git restore --staged <file>` |
+| Kirim cabang ke remote | `git push -u origin lab0-baseline` |
+
+`git switch` dan `git restore` baru ada sejak Git 2.23. Dengan Git yang lebih lama
+(`git --version`), pakai `git checkout -b <cabang>` sebagai pengganti `git switch -c`,
+`git checkout -- <file>` sebagai pengganti `git restore <file>`, dan
+`git reset HEAD <file>` sebagai pengganti `git restore --staged <file>`.
+
+Kebiasaan yang baik:
+
+- **Satu commit, satu maksud.** Pesan commit menjelaskan *apa* dan *kenapa* dalam satu
+  kalimat, bukan "update" atau "fix".
+- **Periksa sebelum commit.** `git status` dan `git diff` memastikan hanya file yang kamu
+  maksud yang ikut, dan tidak ada password atau token (OWASP A02, A05).
+- **Jangan menulis ulang riwayat yang sudah dikirim.** Hindari `git push --force` pada cabang
+  yang dilihat orang lain.
+- File besar atau hasil mentah tidak perlu di-commit. `.gitignore` sudah mengecualikan
+  `target/` dan `labs/*/out/*`.
+
+---
+
+## 7.3 Alur kerja dengan pull request (PR)
+
+1. Pastikan cabang utama bersih dan terbaru, lalu buat cabang baru dari sana.
+2. Kerjakan dan commit bertahap.
+3. Dorong cabang ke remote dan buka PR ke cabang utama.
+4. Isi deskripsi PR: tujuan, apa yang diubah, cara memeriksanya, dan lampiran bukti.
+5. Tanggapi komentar peninjau dengan commit tambahan di cabang yang sama. PR ikut
+   terbarui otomatis.
+6. Setelah disetujui, PR digabung (*merge*) oleh pihak yang berwenang.
+
+Deskripsi PR yang baik menjawab: *apa yang berubah, kenapa, bagaimana kamu tahu itu
+benar,* dan *apa yang belum selesai*. Untuk Lab 0, "bagaimana kamu tahu" adalah file bukti
+dan tabel baseline.
+
+---
+
+## 7.4 Bukti dengan hash
+
+- `task evidence LAB=0` membuat file bukti di `labs/0/out/` berisi hash SHA-256 yang
+  mengikat: nomor lab, commit, `GROUP_SEED`, waktu, dan isi `summary.json`.
+- **Commit dulu sebelum membuat bukti.** Jika masih ada perubahan yang belum di-commit,
+  file bukti mencantumkan "ADA (bukti tidak sah untuk penilaian)".
+- Folder `labs/*/out/` diabaikan Git (kecuali `.gitkeep`), jadi file bukti **tidak ikut
+  commit**. Lampirkan secara manual ke PR (misalnya diunggah di deskripsi atau komentar).
+- Bukti bergantung pada hasil k6 terakhir (`summary.json`). Jangan menjalankan
+  `task reproduce` lagi setelah run pengukuran terbaikmu kalau belum membuat buktinya.
+- **Aturan intinya: angka diukur pada kode yang sama dengan commit yang dibuktikan.**
+  - **Lab 0** (tidak ada perubahan kode): ukur, tulis `BASELINE.md`, `git add` dan
+    `git commit`, **lalu** `task evidence LAB=0`, lampirkan, buka PR. Aman, karena commit
+    hanya menambah dokumen.
+  - **Lab berikutnya** (kode berubah): commit perubahan kode dulu, **lalu**
+    `task reproduce`, **lalu** `task evidence`. Jika alat bukti memperingatkan ada perubahan
+    yang belum di-commit, ikuti pesannya: commit, ulangi `reproduce`, lalu `evidence`.
+- Jangan memperbaiki apa pun di Lab 0. Tugasnya mencatat kondisi awal.
+
+---
+
+## 7.5 Menulis BASELINE.md
+
+`BASELINE.md` di root repo adalah catatan kondisi awal sistem, pembanding semua perbaikan
+di lab berikutnya. Pakai template dari materi minggu 1 jika ada; kerangka di bawah adalah
+panduan isinya.
+
+```markdown
+# Baseline PasarKita – Lab 0
+
+## 1. Identitas dan lingkungan
+- Kelompok, anggota, tanggal, commit (`git rev-parse --short HEAD`)
+- Seed: tulis nilainya (repo kelompok privat) atau cukup "lihat `group.env` pada commit yang diukur"; skala data (S/M), jumlah baris order/produk/customer
+- Laptop: OS, CPU, RAM; memori yang dialokasikan ke Docker
+- Versi: Java, Docker, k6, PostgreSQL
+
+## 2. Metode
+- Urutan: 1 run pemanasan (dibuang) + 3 run pengukuran, durasi dan laju tiap endpoint
+- Kondisi: aplikasi lain ditutup? daya/charger? data direset sebelum run?
+- Hal yang sengaja tidak dilakukan (tidak ada perbaikan)
+
+## 3. Hasil per endpoint
+Tabel dari `labs/0/out/baseline-table.md` untuk tiap run, lalu ringkasan
+(median dan rentang antar run). Kolom "Query/request" diisi dari log SQL.
+
+## 4. Database
+- 5 query teratas dari `pg_stat_statements` (calls, total ms, mean ms)
+- Hasil `EXPLAIN (ANALYZE, BUFFERS)` untuk query yang dicurigai
+
+## 5. Sumber daya
+- CPU, memori JVM, pemakaian pool koneksi, dengan tangkapan layar Grafana
+  (sebutkan rentang waktu UTC-nya)
+
+## 6. Temuan yang mencurigakan (minimal 3)
+Untuk tiap temuan: Pengamatan, Bukti, Hipotesis, Dampak, Cara memverifikasi.
+
+## 7. Keterbatasan dan ketidakpastian
+
+## 8. Lampiran
+- Nama file bukti, daftar perintah yang dijalankan
+```
+
+**Cara menulis temuan yang baik**
+
+| Bagian | Isi | Contoh bentuk |
+| --- | --- | --- |
+| Pengamatan | Fakta berangka dengan satuan | "`GET /api/x` p95 = `<angka>` ms, p50 = `<angka>` ms, 3 run konsisten" |
+| Bukti | Dari mana angkanya, agar bisa diperiksa | "Baris ke-N `baseline-table.md`; panel Grafana X pukul `<jam>` UTC" |
+| Hipotesis | Dugaan penyebab, jelas bertanda belum terbukti | "Diduga `<penyebab>` karena `<alasan>`" |
+| Dampak | Siapa atau apa yang terpengaruh | "Pengguna di `<alur>` menunggu lebih lama" |
+| Cara memverifikasi | Langkah yang akan dilakukan di lab berikutnya | "Bandingkan jumlah query dengan jumlah baris yang dikembalikan" |
+
+**Kesalahan yang sering terjadi**
+
+- **Mencampur fakta dan tafsiran.** "Endpoint lambat karena tidak ada indeks" adalah
+  tafsiran. Tulis pengamatan dan buktinya dulu, hipotesis di kolom terpisah.
+- **Satu run dianggap kebenaran.** Tunjukkan variasi antar run. Kalau tiga run berbeda
+  jauh, itu sendiri sebuah temuan.
+- **Hanya rata-rata.** Sertakan p50, p95, dan p99 (bagian 1.1).
+- **Angka tanpa satuan atau sumber.** "Cepat" atau "lambat" tidak bisa dibandingkan nanti.
+- **Mengklaim penyebab pasti.** Lab 0 mencatat kecurigaan, tidak membuktikannya.
+- **Mencoba memperbaiki sambil mengukur.** Itu merusak baseline.
+- **Tidak menyebut keterbatasan.** Laptop yang sibuk, data skala berbeda, dan layanan luar
+  tiruan memengaruhi angka. Sebutkan.
+
+> Cek diri: sebuah temuan berbunyi "Checkout lambat". Ubah menjadi pengamatan, bukti,
+> hipotesis, dan cara verifikasi yang masing-masing bisa diperiksa orang lain.
+
+---
+
+## 7.6 Riwayat Git sebagai catatan kerja
+
+Riwayat Git bukan sekadar cadangan. Itu **catatan kerja kelompokmu**: siapa mengubah apa,
+kapan, dan dalam urutan apa. Pengajar, kelompokmu sendiri, dan alat bukti memakainya. Karena
+itu ada tiga hal yang perlu dipahami.
+
+### 7.6.1 Riwayat menyimpan semuanya, termasuk yang sudah "dihapus"
+
+Setiap commit menyimpan keadaan penuh berkas pada saat itu. Menghapus sebuah baris di commit
+berikutnya hanya membuat versi terbaru bersih; versi lama tetap ada dan bisa dibuka dengan
+`git show <commit>:<berkas>` atau dicari dengan `git log -S"teks"`.
+
+Akibatnya, apa pun yang pernah di-commit dan di-push dianggap **sudah diketahui orang yang
+punya akses ke repo**, walau sudah dihapus kemudian.
+
+### 7.6.2 Seed itu rahasia antar kelompok; kata sandi dan token tidak boleh masuk repo
+
+`group.env` memang **di-commit dan di-push** ke repo kelompok. Itu disengaja, karena bukti
+(7.4) dan orang lain yang mengulang pengukuranmu perlu tahu seed yang dipakai. Jadi seed
+sudah ada di repo, dan repo kelompok yang **privat** adalah tempat yang aman untuknya.
+
+| Hal | Aturan |
+| --- | --- |
+| Seed di `group.env`, file bukti, dan `BASELINE.md` di repo privat kelompok | Boleh. Di `BASELINE.md` tulis nilainya, atau cukup "lihat `group.env` pada commit yang diukur" |
+| Seed di grup WA kelas, repo publik, atau tangkapan layar yang dibagikan ke kelompok lain | Jangan. Seed adalah data kelompokmu |
+| Kata sandi, token, dan kunci sungguhan | **Jangan di repo mana pun,** privat sekalipun |
+| Repo kelompok | Harus **privat** dan hanya anggota serta pengajar yang diundang |
+
+Jika kata sandi atau token terlanjur ter-commit:
+
+1. Anggap bocor. **Cabut atau ganti dulu** di layanan asalnya.
+2. Hapus dari versi terbaru lewat commit baru dan jelaskan di pesannya (tanpa menulis nilainya).
+3. Beri tahu pengajar. Menulis ulang riwayat saja tidak cukup, karena salinan lama mungkin sudah
+   ada di tempat lain.
+
+Jika seed terlanjur terkirim ke tempat yang tidak seharusnya (grup kelas, repo publik), beri
+tahu pengajar. Seed yang tertulis di repo privat kelompokmu tidak perlu dihapus.
+
+### 7.6.3 Mengapa `git push --force` berbahaya untuk bukti
+
+`task evidence` mengikat commit ke dalam hash (7.4). Hash itu berlaku untuk **commit tertentu**.
+Jika kamu menimpa riwayat dengan `git push --force` (atau `rebase` lalu push paksa), commit lama
+diganti commit baru yang isinya mirip tetapi **nomor commitnya berbeda**. Akibatnya:
+
+- File bukti yang kamu lampirkan merujuk commit yang **tidak ada lagi** di repo.
+- Pengajar tidak bisa memastikan bahwa angka yang kamu laporkan diukur pada kode yang kini ada.
+- Komentar peninjau yang menempel pada commit lama bisa hilang.
+
+Yang dilakukan sebagai gantinya:
+
+| Situasi | Tindakan |
+| --- | --- |
+| Salah menulis sesuatu | Commit perbaikan baru. Riwayat tetap jujur |
+| Kata sandi atau token terlanjur masuk | Lihat 7.6.2: cabut dulu, hapus di commit baru, beri tahu pengajar. Jangan tulis ulang riwayat |
+| Sudah terlanjur force push | Beri tahu pengajar di PR, jelaskan alasannya, lalu **buat ulang bukti** dari commit terbaru |
+| Perlu merapikan commit | Tanyakan dulu. Merapikan boleh sebelum pernah di-push, bukan sesudahnya |
+
+### 7.6.4 Commit harus bisa ditautkan ke orangnya
+
+GitHub menautkan commit ke akun lewat **email yang tertulis di commit**. Jika emailnya tidak
+terdaftar di akunmu, commit muncul tanpa foto akun dan tidak dihitung sebagai kontribusimu.
+
+- Atur sekali di tiap laptop: `git config user.name "Nama"` dan `git config user.email "email-di-github"`.
+- Gunakan email yang terdaftar di GitHub (Settings, Emails), atau alamat `...@users.noreply.github.com`.
+- Satu laptop dipakai berdua: orang yang mengetik meng-commit, dan rekannya ditulis di akhir
+  pesan setelah satu baris kosong: `Co-authored-by: Nama <email>`.
+- Pembagian kerja yang tidak terlihat di commit (satu menganalisis, satu mengetik) ditulis di
+  Issue atau deskripsi PR.
+
+### 7.6.5 Memeriksa riwayatmu sendiri
+
+Semua perintah ini hanya membaca.
+
+| Pertanyaan | Perintah | Hasil yang diharapkan |
+| --- | --- | --- |
+| Token atau kunci pernah di-commit? | `git log --all -G"(ghp_|github_pat_)[A-Za-z0-9_]{20,}|AKIA[0-9A-Z]{16}|BEGIN [A-Z ]*PRIVATE KEY" --oneline` | kosong |
+| Repo privat? | GitHub, Settings, General, bagian paling bawah | Private |
+| Commit tertaut ke akun? | `git log --format="%h %an <%ae>" -10` | email terdaftar di GitHub |
+| Semua sudah di-push? | `git status -sb` | tanpa kata "ahead" |
+| Ada commit yang menimpa riwayat? | `git reflog` | tidak ada `reset` atau `rebase` yang kamu tidak ingat |
+
+> Cek diri: sebuah token tertulis di `docs/PANDUAN-SETUP.md` pada commit tiga hari lalu, dan
+> sudah kamu hapus di commit kemarin. Apakah token masih bisa ditemukan? Langkah apa yang kamu
+> ambil lebih dulu, dan apa yang tidak kamu lakukan?
+
+---
+
+*Sebelumnya: [Bagian 6](06-diagnosa-dan-latihan.md) · [Daftar isi](../MATERI-DASAR.md) · Berikutnya: [Bagian 8](08-contoh-pengerjaan-tiket.md)*
