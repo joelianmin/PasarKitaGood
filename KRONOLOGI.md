@@ -11,6 +11,7 @@ Waktu dalam **WIB** kecuali ditandai UTC.
 >   konteks. **Isi pesan** mereka nyata (ada di tiket dan paket konteks). Yang mereka pikirkan, pertimbangkan, pelajari,
 >   dan reaksi mereka sesudah tiket ditutup adalah **fiksi yang masuk akal**: tidak tertulis di repo, tetapi tidak
 >   bertentangan dengan catatan dan angka nyata. Semua bagian fiksi diberi tanda *(fiktif)*.
+> - **Teks asli** tiket dan paket konteks dikutip utuh di titik waktunya, supaya bisa dirujuk tanpa membuka berkas lain.
 > - Tinjauan di PR berjarak beberapa detik karena satu akun mengirim komentar berurutan. Di kelompokmu, tinjauan butuh
 >   waktu sungguhan; yang ditiru adalah isinya, bukan kecepatannya.
 
@@ -38,6 +39,21 @@ Tiga dokumen ini sudah ada sebelum siapa pun membuka tiket. Merekalah yang nanti
 
 ### 1 Oktober 2026: Tim Platform menyusun anggaran kuartal 4
 
+**Teks asli** (`labs/pk-200/konteks/03-anggaran-infrastruktur.md`):
+
+> **Ringkasan Anggaran Infrastruktur Kuartal 4 2026**
+>
+> **Disusun oleh:** Tim Platform · **Data per 1 Oktober 2026**
+>
+> | Pos | Status |
+> | --- | --- |
+> | Server aplikasi | 8 instance, tidak ada anggaran tambahan kuartal ini |
+> | Database | Penambahan memori dianggarkan kuartal 2 tahun 2027 |
+> | CDN | Kontrak tetap sampai Juni 2027; biaya dihitung dari lalu lintas ke server gambar |
+>
+> - Penambahan server aplikasi di luar anggaran memerlukan persetujuan Komite Arsitektur, yang bersidang sebulan sekali.
+> - Kenaikan lalu lintas ke server gambar akibat CDN membuat ulang gambar ditagihkan sebagai biaya tambahan.
+
 - **Dilakukan.** Menulis bahwa server aplikasi tetap 8 instance tanpa anggaran tambahan, penambahan di luar anggaran
   butuh Komite Arsitektur yang bersidang sebulan sekali, dan kenaikan lalu lintas server gambar ditagihkan.
 - **Dipikirkan** *(fiktif)*. Kuartal lalu tagihan cloud melonjak karena server ditambah setiap kali ada keluhan lambat,
@@ -47,6 +63,16 @@ Tiga dokumen ini sudah ada sebelum siapa pun membuka tiket. Merekalah yang nanti
 - **Sumber.** `labs/pk-200/konteks/03-anggaran-infrastruktur.md`
 
 ### 12 November 2026: Bayu (Product) dan Tim Desain memutuskan flag tetap menyala
+
+**Teks asli** (`labs/pk-200/konteks/01-keputusan-produk-thumbnail.md`):
+
+> **Keputusan Produk: Thumbnail Dinamis di Profil Toko**
+>
+> **Tanggal:** 12 November 2026 · **Disetujui:** Bayu (Product), Tim Desain
+>
+> 1. Flag `seller.dynamic-thumbnail` **tetap menyala**. Uji A/B dua minggu menunjukkan klik produk dari halaman profil toko naik 9%.
+> 2. Mematikan flag hanya boleh sebagai langkah darurat sementara, dengan persetujuan Product, dan harus dicatat sebagai insiden.
+> 3. Format URL thumbnail di respons profil: `/thumbnails/<id produk>-<kode warna>.jpg`. Format dan isinya **tidak boleh berubah** (lihat thread CDN).
 
 - **Dilakukan.** Memutuskan `seller.dynamic-thumbnail` tetap menyala, mematikannya hanya darurat dengan persetujuan
   Product dan dicatat sebagai insiden, dan format URL thumbnail tidak boleh berubah.
@@ -58,6 +84,22 @@ Tiga dokumen ini sudah ada sebelum siapa pun membuka tiket. Merekalah yang nanti
 - **Sumber.** `labs/pk-200/konteks/01-keputusan-produk-thumbnail.md`
 
 ### 13 November 2026, 09.15 sampai 09.41: thread #infra-cdn
+
+**Teks asli** (`labs/pk-200/konteks/02-thread-cdn.md`):
+
+> **Thread #infra-cdn**
+>
+> **Rudi (Front-end), 13 Nov 2026, 09.15**
+> CDN menyimpan gambar thumbnail berdasarkan URL persisnya. Kalau `<kode warna>` di URL berubah, CDN menganggapnya gambar baru dan membuat ulang semuanya dari awal.
+>
+> **Tomi (Pemantauan), 09.22**
+> Terakhir kali itu terjadi, lalu lintas ke server gambar naik delapan kali lipat selama dua hari. Mohon jangan sampai terulang.
+>
+> **Bayu (Product), 09.30**
+> Dicatat. URL thumbnail yang sudah ada dianggap kontrak dengan CDN dan aplikasi mobile.
+>
+> **Rudi, 09.41**
+> Satu lagi: aplikasi menampilkan thumbnail profil dalam ukuran 200 x 200 piksel. Gambar 1600 x 1600 hanya dipakai untuk fitur zoom di halaman detail produk.
 
 | Jam | Siapa | Isi pesan | Dipikirkan *(fiktif)* |
 | --- | --- | --- | --- |
@@ -96,6 +138,37 @@ Tiga dokumen ini sudah ada sebelum siapa pun membuka tiket. Merekalah yang nanti
 - **Dipikirkan.** Grafana memakai UTC; jam yang dicatat di dua zona mencegah salah baca panel.
 
 ### 19.28: Tim Dukungan Penjual melaporkan #4821
+
+**Teks asli** (`labs/latihan/TIKET.md`):
+
+> **Tiket #4821: Halaman profil toko terasa lambat**
+>
+> | | |
+> | --- | --- |
+> | Dari | Tim Dukungan Penjual |
+> | Prioritas | Sedang |
+> | Dilaporkan | Pada **jam tiket** (WIB): jam yang dicetak oleh `task latihan:mulai` sebagai "Tiketmu melaporkan masalah sekitar pukul ..." |
+> | Komponen | PasarKita, halaman profil toko (`GET /api/sellers/{id}/profile`) |
+>
+> **Keluhan.** Beberapa penjual menghubungi dukungan dan bilang halaman profil toko mereka
+> terasa sangat lama dibuka, sampai beberapa detik. Kemarin masih cepat. Keluhan paling banyak
+> datang dari toko yang produknya banyak.
+>
+> **Yang kami tahu.**
+> - Halaman lain (katalog, pencarian, keranjang) tidak dikeluhkan.
+> - Tidak ada rilis kode yang tercatat hari ini. Kami tidak bisa memastikan apakah ada perubahan
+>   konfigurasi.
+> - Belum jelas apakah semua toko terdampak atau hanya sebagian.
+>
+> **Yang diminta.** Pahami apa yang sebenarnya terjadi dan di lapisan mana. Kumpulkan bukti dari
+> lebih dari satu sumber, tulis hipotesismu, dan catat apa yang belum kamu ketahui. **Jangan
+> memperbaiki apa pun.**
+>
+> **Catatan.**
+> - Waktu pada tiket ini dalam WIB. Alat ukur kita mungkin memakai zona waktu lain.
+> - Tidak semua yang muncul di log dan grafik berhubungan dengan tiket ini.
+> - Daftarkan tiket ini sebagai Issue di repo kelompok (templat "Tiket kerja"), dengan kata-katamu
+>   sendiri, dan beri penanggung jawab.
 
 - **Isi laporan.** Beberapa penjual bilang profil toko butuh beberapa detik; kemarin masih cepat; toko dengan produk banyak
   paling sering mengeluh.
@@ -173,6 +246,22 @@ Tidak ada kerja. Ayu menunggu pembaruan templat. Jeda ini nanti dicatat terbuka 
 - **Sumber.** PR #4, commit `07902d1`
 
 ### 07.31: Ayu membaca tiket PK-200 dan menulis prediksi
+
+**Teks asli** (`labs/pk-200/LAB.md`):
+
+> **PK-200: Profil toko lambat sejak thumbnail dinamis dinyalakan**
+>
+> > **Maya, Account Manager (Senin, 10.05):** Toko Raksasa dan beberapa toko lain mengeluh halaman profil toko mereka butuh beberapa detik untuk dibuka. Diagnosisnya sudah ada di tiket #4821.
+>
+> > **Eko, Senior Developer (10.20):** Matikan saja flag thumbnail-nya, beres.
+>
+> > **Dimas, QA (10.40):** Atau tambah server aplikasi supaya kuat?
+>
+> **Yang diharapkan**
+>
+> - p95 `GET /api/sellers/{id}/profile` pada 2 req/detik dengan flag `seller.dynamic-thumbnail` menyala tidak lebih dari dua kali p95 saat flag mati, diukur di laptop yang sama.
+> - Tidak ada request yang gagal pada 2 req/detik.
+> - Respons profil tidak berubah selama flag menyala.
 
 Isi tiket (di dalam cerita, Senin):
 
