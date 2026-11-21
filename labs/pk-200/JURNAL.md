@@ -71,7 +71,25 @@ Laptop: Intel Core i5-5250U (2 core, 4 thread), RAM 8 GB, macOS 12, tanpa Docker
 
 Dipilih **D**. Sebelum diuji, D hampir saya tolak karena prediksi 3; uji 255 warna menggugurkan prediksi itu.
 
+## Perbaikan dan pengukuran ulang
+
+- **07.47 WIB:** commit `48cab1c` menambah `ThumbnailServiceTest` (URL sama dengan cara lama untuk 255 warna dan tiga id besar). Lulus pada kode lama (2 dari 2).
+- **07.48 WIB:** commit `0f51d95` mengubah `ThumbnailService` (gambar langsung 200 x 200). Test yang sama tetap lulus (2 dari 2).
+- **07.50 WIB:** aplikasi dijalankan ulang dari cabang `pk-200`; flag **tetap menyala**.
+- **07.50 WIB, 1 req/detik:** penjual 1 p50 27 ms, p95 52 ms; penjual lain p50 18 ms, p95 40 ms; 0% gagal. `curl`: penjual 1 median 24 ms, penjual 2 14 ms, penjual 77 14 ms. CPU (`ps`) 0,1 sampai 3,9%.
+- **07.53 WIB, 2 req/detik:** penjual 1 p50 24 ms, p95 39 ms, p99 56 ms; penjual lain p50 17 ms, p95 25 ms, p99 34 ms; 0% gagal. CPU (`ps`) 0,8 sampai 9,3%.
+- **07.57 WIB:** `task evidence LAB=pk-200` dari commit `0f51d95` (pohon kerja bersih), hash `43ab056d...0706436`.
+- **Respons:** JSON profil penjual 1, 2, 77 sebelum perbaikan (flag menyala, 07.41) dan sesudah (07.53) dibandingkan dengan `cmp`: **sama persis**.
+
+| Target tiket | Hasil | Terpenuhi? |
+| --- | --- | --- |
+| p95 2 req/detik (flag menyala) ≤ 2 x p95 flag mati | penjual 1: 39 ms vs 2 x 22 = 44 ms; penjual lain: 25 ms vs 2 x 23 = 46 ms | Ya |
+| Tidak ada request gagal pada 2 req/detik | 0% (sebelum: 35,9 sampai 40,7%) | Ya |
+| Respons profil tidak berubah | `cmp` sama persis untuk 3 penjual; test 255 warna lulus | Ya |
+
 ## 5. Dugaan awal vs temuan (isi di akhir)
 
 > Dugaan awal benar, sebagian, atau salah? Apa yang mengubahnya? Satu sampai tiga kalimat.
+
+Prediksi 1 (waktu di `thumbnailFor`) dan 2 (mematikan flag mengubah respons) **benar**. Prediksi 3 (gambar langsung kecil mengubah URL) **salah**, dan itu yang paling berharga: tanpa menguji 255 warna, saya akan menolak perbaikan terbaik dan memilih cache yang hanya menutupi biayanya.
 
