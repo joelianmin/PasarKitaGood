@@ -1,3 +1,26 @@
+# PasarKitaGood: contoh ideal pengerjaan tiket
+
+Repo ini dibuat dari templat [PasarKita](https://github.com/joelianmin/PasarKita) dan dikerjakan seperti repo kelompok,
+dari rencana sampai tiket ditutup. **Kode, perintah, dan semua angka nyata**: diukur pada 20 dan 21 November 2026 di
+laptop Intel Core i5-5250U (2 core, 4 thread), RAM 8 GB, macOS 12, tanpa Docker, data skala S.
+
+**Peran contoh.** Satu akun GitHub memerankan tiga anggota kelompok: **Ayu** (pemilik tiket), **Bimo** dan **Citra**
+(peninjau). Tinjauan ditulis sebagai komentar bertanda peran, karena GitHub tidak mengizinkan penulis PR menyetujui
+PR-nya sendiri. Di kelompokmu, peninjau memakai akunnya sendiri dan menekan Approve.
+
+## Urutan membaca
+
+| # | Apa | Tempat | Yang patut ditiru |
+| --- | --- | --- | --- |
+| 1 | Rencana sesi | [Issue #1](https://github.com/joelianmin/PasarKitaGood/issues/1) | Risiko dengan tanda dan rencana B; komentar Cek, Perubahan (sesi terbelah semalam), dan Refleksi |
+| 2 | Diagnosis #4821 (latihan) | [Issue #2](https://github.com/joelianmin/PasarKitaGood/issues/2), [PR #3](https://github.com/joelianmin/PasarKitaGood/pull/3), `labs/latihan/LAPORAN-4821.md` | Sepuluh bukti dengan jam WIB/UTC; `RATE=1` saat laptop jenuh; dugaan yang gugur ditulis; tinjauan menemukan satuan CPU yang bercampur |
+| 3 | Mengambil pembaruan templat | [PR #4](https://github.com/joelianmin/PasarKitaGood/pull/4) | Mengikuti `docs/PANDUAN-PEMBARUAN.md` tanpa menyentuh berkas kelompok |
+| 4 | Perbaikan PK-200 | [Issue #5](https://github.com/joelianmin/PasarKitaGood/issues/5), [PR #6](https://github.com/joelianmin/PasarKitaGood/pull/6), `labs/pk-200/JURNAL.md` | Prediksi sebelum mengukur; batasan dari paket konteks; prediksi yang salah diuji (255 warna); test patokan ditulis sebelum kode diubah; `task evidence` dari commit bersih; komentar penutupan lengkap |
+
+Label tiket bergerak `triage` → `diagnosis` → `review` → `selesai`. Tiket berikutnya ditambahkan setelah tenggatnya lewat.
+
+---
+
 # PasarKita – base code minggu 1
 
 Aplikasi modulith Spring Boot untuk lab backend. Versi ini disiapkan untuk minggu 1
