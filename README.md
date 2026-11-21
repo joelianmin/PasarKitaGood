@@ -17,6 +17,9 @@ PR-nya sendiri. Di kelompokmu, peninjau memakai akunnya sendiri dan menekan Appr
 | 3 | Mengambil pembaruan templat | [PR #4](https://github.com/joelianmin/PasarKitaGood/pull/4) | Mengikuti `docs/PANDUAN-PEMBARUAN.md` tanpa menyentuh berkas kelompok |
 | 4 | Perbaikan PK-200 | [Issue #5](https://github.com/joelianmin/PasarKitaGood/issues/5), [PR #6](https://github.com/joelianmin/PasarKitaGood/pull/6), `labs/pk-200/JURNAL.md` | Prediksi sebelum mengukur; batasan dari paket konteks; prediksi yang salah diuji (255 warna); test patokan ditulis sebelum kode diubah; `task evidence` dari commit bersih; komentar penutupan lengkap |
 
+Urutan waktu lengkap, termasuk apa yang dipikirkan, dipertimbangkan, dan dipelajari setiap pemangku kepentingan (anggota
+kelompok, pelapor, Product, CDN, Platform): [`KRONOLOGI.md`](KRONOLOGI.md).
+
 Label tiket bergerak `triage` → `diagnosis` → `review` → `selesai`. Tiket berikutnya ditambahkan setelah tenggatnya lewat.
 
 ---
