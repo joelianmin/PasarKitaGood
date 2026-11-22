@@ -13,7 +13,7 @@
 
 **Yang diharapkan**
 
-- p95 `GET /api/sellers/{id}/profile` pada 2 req/detik dengan flag `seller.dynamic-thumbnail` menyala tidak lebih dari dua kali p95 saat flag mati, diukur di laptop yang sama.
+- p95 `GET /api/sellers/{id}/profile` pada 2 req/detik dengan flag `seller.dynamic-thumbnail` menyala tidak lebih dari dua kali p95 saat flag mati, diukur di komputer yang sama.
 - Tidak ada request yang gagal pada 2 req/detik.
 - Respons profil tidak berubah selama flag menyala.
 
@@ -41,7 +41,7 @@ Dokumen di folder [`konteks/`](konteks/). Tidak semua isinya relevan, dan bebera
 - Tiket contoh. Pengerjaan lengkapnya (Issue, jurnal, PR, tinjauan, bukti, komentar penutupan) ada di https://github.com/joelianmin/PasarKitaGood.
 - Data skala S (200 penjual), sama seperti tiket #4821. Nyalakan kondisi dengan `task latihan:mulai` dan matikan dengan `task latihan:selesai`.
 - Endpoint: `GET /api/sellers/{id}/profile`, laju 2 req/detik, 3 menit, sekitar 30% request ke penjual 1. Ringkasan dipisah: penjual 1 dan penjual lain.
-- Bila laptopmu jenuh (banyak request gagal) saat flag menyala, ukur juga dengan `RATE=1` dan catat keduanya.
+- Bila komputermu kewalahan (banyak request gagal) saat flag menyala, ukur juga dengan `RATE=1` dan catat keduanya.
 - Beban memakai laju tetap (model terbuka), tanpa threshold lulus atau gagal. Run ini mengukur.
 - Jalankan dari root repo. Hasil mentah ada di `labs/pk-200/out/` dan tidak ikut Git.
 - `RATE` dan `DURATION` bisa diubah lewat variabel lingkungan (macOS dan Linux: `RATE=1 task reproduce LAB=pk-200`; PowerShell: `$env:RATE=1`) atau `-e RATE=1` pada `k6 run` langsung. Catat perubahan itu di laporanmu.
