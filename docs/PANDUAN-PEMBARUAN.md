@@ -8,10 +8,14 @@ Satu orang di kelompok mengerjakannya lewat satu PR, lalu semua anggota mengambi
 
 | Diambil dari templat | Tetap milikmu (tidak disentuh) |
 | --- | --- |
-| `Taskfile.yml`, `infra/`, `tools/`, `labs/`, `docs/`, `.github/`, `README.md` | `group.env`, `BASELINE.md`, `KONTRIBUSI.md`, `src/`, `pom.xml` |
+| `Taskfile.yml`, `infra/`, `tools/`, `labs/`, `docs/`, `.github/` | `README.md`, `group.env`, `BASELINE.md`, `KONTRIBUSI.md`, `src/`, `pom.xml` |
 | Folder lab baru, materi baru, templat Issue dan PR | `labs/latihan/LAPORAN-*.md`, laporan dan jurnal yang kamu tulis, `labs/*/out/` |
 
 Berkas yang kamu buat sendiri dan tidak ada di templat tidak terhapus.
+
+**`README.md` tidak diambil**, karena README adalah halaman depan repomu dan mungkin sudah kamu ubah. Untuk melihat
+README templat terbaru tanpa menimpa milikmu: `git show templat/main:README.md`. Bila ada bagian yang kamu perlukan,
+salin bagian itu secara manual.
 
 **Pernah mengubah `Taskfile.yml`, `infra/`, atau berkas alat lain?** (misalnya mengikuti materi 2.7). Perubahan
 itu akan tertimpa. Simpan dulu: `git diff Taskfile.yml infra > perubahanku.patch`, lalu terapkan lagi sesudah
@@ -43,7 +47,12 @@ langkah 6 dengan `git apply perubahanku.patch` bila masih diperlukan. Jangan men
    ```
 6. Ambil berkas dari templat:
    ```bash
-   git checkout templat/main -- Taskfile.yml infra tools labs docs .github README.md
+   git checkout templat/main -- Taskfile.yml infra tools labs docs .github
+   ```
+   **Khusus PasarKitaGood:** langkah ini juga menimpa panduan ini dengan versi repo induk, yang masih mengambil
+   `README.md`. Kembalikan panduan ini sebelum commit:
+   ```bash
+   git checkout HEAD -- docs/PANDUAN-PEMBARUAN.md
    ```
 7. Periksa dan commit:
    ```bash
