@@ -1,35 +1,93 @@
-# Kronologi #4821 dan PK-200: siapa memikirkan, mempertimbangkan, mempelajari, dan melakukan apa
+# Kronologi tiket #4821 dan PK-200
 
-Urutan waktu semua pemangku kepentingan tiket, dari keputusan yang sudah ada sebelum tiket muncul sampai tiket ditutup.
-Waktu dalam **WIB** kecuali ditandai UTC.
+Dokumen ini menceritakan, menurut urutan waktu, bagaimana satu masalah kinerja ditemukan, didiagnosis, dan diperbaiki
+di aplikasi PasarKita: siapa melakukan apa, apa yang mereka pikirkan dan pertimbangkan, dan apa yang mereka pelajari.
+Bisa dibaca tanpa membuka berkas lain.
 
-> **Cara membaca.**
-> - **Dilakukan** dan semua **angka** nyata. Masing-masing bisa dicek di Issue, PR, commit, atau berkas yang disebut di kolom Sumber.
-> - **Ayu, Bimo, Citra** adalah peran yang dimainkan satu akun (lihat README). Bagian **dipikirkan** dan **dipertimbangkan**
->   mereka disusun dari apa yang mereka tulis di Issue, PR, dan jurnal, bukan karangan baru.
-> - **Maya, Eko, Dimas, Bayu, Rudi, Tomi, Tim Platform, Tim Dukungan Penjual** adalah tokoh di dalam tiket dan paket
->   konteks. **Isi pesan** mereka nyata (ada di tiket dan paket konteks). Yang mereka pikirkan, pertimbangkan, pelajari,
->   dan reaksi mereka sesudah tiket ditutup adalah **fiksi yang masuk akal**: tidak tertulis di repo, tetapi tidak
->   bertentangan dengan catatan dan angka nyata. Semua bagian fiksi diberi tanda *(fiktif)*.
-> - **Teks asli** tiket dan paket konteks dikutip utuh di titik waktunya, supaya bisa dirujuk tanpa membuka berkas lain.
-> - Tinjauan di PR berjarak beberapa detik karena satu akun mengirim komentar berurutan. Di kelompokmu, tinjauan butuh
->   waktu sungguhan; yang ditiru adalah isinya, bukan kecepatannya.
+## Ringkasan
 
-## Pemangku kepentingan
+**Aplikasinya.** PasarKita adalah aplikasi toko daring untuk lab mata kuliah backend (Spring Boot dan PostgreSQL). Salah
+satu halamannya adalah **profil toko** (`GET /api/sellers/{id}/profile`): data toko dan sampai 60 produknya, masing-masing
+dengan alamat gambar kecil (**thumbnail**).
 
-| Siapa | Peran | Muncul di |
+**Masalahnya.** Suatu hari penjual mengeluh profil toko butuh beberapa detik untuk dibuka, padahal kemarin cepat. Toko
+dengan produk terbanyak paling parah.
+
+**Penyebabnya.** Tim Product baru menyalakan fitur **thumbnail dinamis** (dikendalikan saklar `seller.dynamic-thumbnail`).
+Untuk setiap produk, kode membuat gambar besar 1600 x 1600 piksel, mengecilkannya, lalu hanya membaca **satu piksel** untuk
+menyusun alamat thumbnail. Untuk 60 produk, pekerjaan itu memakan sekitar 1 detik CPU per request. Database tidak terlibat.
+
+**Kenapa tidak bisa diperbaiki sembarangan.** Tiga dokumen menutup jalan pintas:
+- Product memutuskan fitur ini **tetap menyala** (klik produk naik 9%).
+- Alamat thumbnail **tidak boleh berubah**, karena CDN (layanan penyimpan gambar) akan membuat ulang semua gambar dan biayanya
+  naik.
+- **Tidak ada anggaran** untuk server tambahan.
+
+**Perbaikannya.** Gambar dibuat langsung 200 x 200 piksel, ukuran yang memang ditampilkan di layar. Satu berkas kode diubah.
+Sebuah test membuktikan alamat thumbnail tetap sama untuk **semua** 255 kemungkinan warna.
+
+**Hasilnya** (2 request per detik, saklar tetap menyala, laptop yang sama):
+
+| | Saklar mati (patokan) | Sebelum perbaikan | Sesudah perbaikan |
+| --- | --- | --- | --- |
+| Waktu respons toko terbesar (p95) | 22 ms | sekitar 57 detik, 40,7% request gagal | **39 ms**, 0 gagal |
+| Pemakaian CPU aplikasi (per core; 4 thread = 400%) | | 137 sampai 299% | 0,8 sampai 9,3% |
+| Isi respons | | | Sama persis dengan sebelum perbaikan |
+
+**Pelajaran terbesarnya.** Pemilik tiket hampir menolak perbaikan terbaik karena yakin gambar kecil akan mengubah alamat
+thumbnail. Ia mengujinya dulu, dan dugaannya ternyata salah.
+
+## Istilah
+
+| Istilah | Arti |
+| --- | --- |
+| Tiket | Laporan masalah. **#4821** meminta diagnosis saja; **PK-200** meminta perbaikan |
+| Paket konteks | Dokumen pendukung tiket (keputusan produk, percakapan tim, anggaran) yang berisi batasan |
+| Flag (saklar fitur) | Pengaturan untuk menyalakan atau mematikan fitur tanpa rilis kode |
+| p50, p95 | Waktu respons yang tidak dilampaui oleh 50% dan 95% request. p95 menggambarkan pengalaman pengguna yang paling lambat |
+| req/detik | Request per detik, beban yang dikirim alat uji **k6** |
+| Patokan | Ukuran sebelum masalah, sebagai pembanding |
+| Issue, PR | Halaman GitHub: Issue mencatat tiket dan diskusinya; PR (pull request) berisi perubahan yang ditinjau sebelum digabung |
+| Commit | Satu simpanan perubahan di Git, dikenali dengan kode pendek seperti `0f51d95` |
+| WIB, UTC | Zona waktu. WIB = UTC + 7 jam. Grafik pemantauan memakai UTC |
+
+## Siapa saja
+
+| Siapa | Peran | Di cerita ini |
 | --- | --- | --- |
-| Tim Dukungan Penjual | Pelapor #4821 | `labs/latihan/TIKET.md` |
-| Maya | Account Manager, pelapor PK-200 | `labs/pk-200/LAB.md` |
-| Eko | Senior Developer, memberi usul | `labs/pk-200/LAB.md` |
-| Dimas | QA, memberi usul | `labs/pk-200/LAB.md` |
-| Bayu | Product, pemilik keputusan flag | `konteks/01`, `konteks/02` |
-| Rudi | Front-end | `konteks/02` |
-| Tomi | Pemantauan | `konteks/02` |
-| Tim Platform | Penyusun anggaran | `konteks/03` |
-| Ayu | Pemilik tiket (peran) | Issue #1, #2, #5; PR #3, #4, #6 |
-| Bimo | Peninjau 1 (peran) | PR #3, #4, #6 |
-| Citra | Peninjau 2 (peran) | PR #3, #6 |
+| Ayu | Pemilik tiket, anggota kelompok | Mengukur, mendiagnosis, memperbaiki |
+| Bimo | Peninjau 1, anggota kelompok | Meninjau laporan dan perbaikan |
+| Citra | Peninjau 2, anggota kelompok | Meninjau hal yang tidak diperiksa Bimo |
+| Tim Dukungan Penjual | Pelapor tiket #4821 | Meneruskan keluhan penjual |
+| Maya | Account Manager | Melapor di tiket PK-200 |
+| Eko | Senior Developer | Mengusulkan "matikan saja flag-nya" |
+| Dimas | QA (penguji) | Mengusulkan "tambah server" |
+| Bayu | Product | Memutuskan flag tetap menyala |
+| Rudi | Front-end | Menjelaskan cara CDN dan ukuran gambar di layar |
+| Tomi | Pemantauan | Mengingatkan lonjakan biaya CDN sebelumnya |
+| Tim Platform | Pengelola anggaran infrastruktur | Menyusun anggaran tanpa server tambahan |
+
+## Apa yang nyata dan apa yang ilustrasi
+
+- **Nyata:** semua tindakan, jam, angka, kode, Issue, PR, dan commit. Sumbernya disebut di setiap langkah dan bisa
+  diperiksa di repo ini.
+- **Teks asli:** isi tiket dan paket konteks dikutip utuh di titik waktunya.
+- **Ayu, Bimo, Citra:** tiga peran yang dimainkan satu akun GitHub. Pikiran mereka disusun dari apa yang mereka tulis
+  sendiri di Issue, PR, dan jurnal. Komentar tinjauan berjarak beberapa detik karena satu akun mengirimnya berurutan; di
+  kelompok sungguhan tinjauan butuh waktu.
+- **Tokoh lain** (Maya, Eko, Dimas, Bayu, Rudi, Tomi, Tim Platform, Tim Dukungan Penjual) hanya ada di teks tiket dan paket
+  konteks. Pesan mereka asli dari teks itu. Yang mereka pikirkan, pertimbangkan, dan pelajari adalah **ilustrasi**: dibuat
+  untuk membantu memahami sudut pandang mereka, masuk akal, dan tidak bertentangan dengan fakta. Ditandai *(ilustrasi)*.
+
+## Daftar isi
+
+1. [Sebelum tiket ada](#bagian-a-sebelum-tiket-ada): anggaran, keputusan produk, percakapan CDN
+2. [Jumat 20 November: diagnosis #4821](#bagian-b-jumat-20-november-2026-diagnosis-4821)
+3. [Sabtu 21 November: perbaikan PK-200](#bagian-c-sabtu-21-november-2026-perbaikan-pk-200)
+4. [Sesudah tiket ditutup](#bagian-d-sesudah-penutupan-ilustrasi)
+5. [Ringkasan pelajaran](#ringkasan-pelajaran)
+
+Semua jam dalam **WIB**, kecuali ditandai UTC.
 
 ---
 
@@ -56,9 +114,9 @@ Tiga dokumen ini sudah ada sebelum siapa pun membuka tiket. Merekalah yang nanti
 
 - **Dilakukan.** Menulis bahwa server aplikasi tetap 8 instance tanpa anggaran tambahan, penambahan di luar anggaran
   butuh Komite Arsitektur yang bersidang sebulan sekali, dan kenaikan lalu lintas server gambar ditagihkan.
-- **Dipikirkan** *(fiktif)*. Kuartal lalu tagihan cloud melonjak karena server ditambah setiap kali ada keluhan lambat,
+- **Dipikirkan** *(ilustrasi)*. Kuartal lalu tagihan cloud melonjak karena server ditambah setiap kali ada keluhan lambat,
   lalu tidak pernah dikurangi. Biaya harus bisa diramalkan, jadi jalan pintas "tambah mesin" sengaja dibuat lambat.
-- **Dipertimbangkan** *(fiktif)*. Melarang total penambahan server terlalu kaku untuk keadaan darurat. Jalan tengahnya
+- **Dipertimbangkan** *(ilustrasi)*. Melarang total penambahan server terlalu kaku untuk keadaan darurat. Jalan tengahnya
   Komite Arsitektur: tetap bisa, tetapi orang dipaksa menjelaskan mengapa kode tidak bisa diperbaiki dulu.
 - **Sumber.** `labs/pk-200/konteks/03-anggaran-infrastruktur.md`
 
@@ -77,7 +135,7 @@ Tiga dokumen ini sudah ada sebelum siapa pun membuka tiket. Merekalah yang nanti
 - **Dilakukan.** Memutuskan `seller.dynamic-thumbnail` tetap menyala, mematikannya hanya darurat dengan persetujuan
   Product dan dicatat sebagai insiden, dan format URL thumbnail tidak boleh berubah.
 - **Dipertimbangkan.** Hasil uji A/B dua minggu: klik produk dari profil toko naik 9%.
-- **Dipikirkan** *(fiktif)*. Bayu pernah melihat fitur bagus dimatikan "sementara" saat ada keluhan lalu tidak pernah
+- **Dipikirkan** *(ilustrasi)*. Bayu pernah melihat fitur bagus dimatikan "sementara" saat ada keluhan lalu tidak pernah
   dinyalakan lagi. Karena itu mematikan flag dibuat mahal secara prosedur: butuh persetujuan Product dan dicatat sebagai
   insiden. Ia tidak menulis apa pun soal kecepatan, karena uji A/B berjalan dengan lalu lintas kecil dan tidak ada yang
   mengeluh.
@@ -101,7 +159,7 @@ Tiga dokumen ini sudah ada sebelum siapa pun membuka tiket. Merekalah yang nanti
 > **Rudi, 09.41**
 > Satu lagi: aplikasi menampilkan thumbnail profil dalam ukuran 200 x 200 piksel. Gambar 1600 x 1600 hanya dipakai untuk fitur zoom di halaman detail produk.
 
-| Jam | Siapa | Isi pesan | Dipikirkan *(fiktif)* |
+| Jam | Siapa | Isi pesan | Dipikirkan *(ilustrasi)* |
 | --- | --- | --- | --- |
 | 09.15 | Rudi | CDN menyimpan gambar berdasarkan URL persis; kode warna berubah berarti semua gambar dibuat ulang | Mencegah perubahan kecil di backend menjadi masalah besar di CDN |
 | 09.22 | Tomi | Terakhir kali, lalu lintas server gambar naik delapan kali selama dua hari | Pernah mengalaminya; tidak mau terulang |
@@ -172,10 +230,10 @@ Tiga dokumen ini sudah ada sebelum siapa pun membuka tiket. Merekalah yang nanti
 
 - **Isi laporan.** Beberapa penjual bilang profil toko butuh beberapa detik; kemarin masih cepat; toko dengan produk banyak
   paling sering mengeluh.
-- **Dipikirkan** *(fiktif)*. Petugas dukungan menerima tiga keluhan serupa dalam satu jam dan ragu apakah ini masalah
+- **Dipikirkan** *(ilustrasi)*. Petugas dukungan menerima tiga keluhan serupa dalam satu jam dan ragu apakah ini masalah
   jaringan penjual. Ia mencoba sendiri membuka profil toko besar dan kecil; toko besar terasa jauh lebih lama. Ia menulis
   apa yang dirasakan, bukan penyebabnya, karena tidak tahu penyebabnya.
-- **Dipertimbangkan** *(fiktif)*. Prioritas "tinggi" atau "sedang". Ia memilih sedang: halaman lain normal dan pembeli
+- **Dipertimbangkan** *(ilustrasi)*. Prioritas "tinggi" atau "sedang". Ia memilih sedang: halaman lain normal dan pembeli
   masih bisa berbelanja.
 - **Sumber.** `labs/latihan/TIKET.md`
 
@@ -265,13 +323,13 @@ Tidak ada kerja. Ayu menunggu pembaruan templat. Jeda ini nanti dicatat terbuka 
 
 Isi tiket (di dalam cerita, Senin):
 
-| Jam | Siapa | Isi pesan | Dipikirkan *(fiktif)* | Bagaimana Ayu menilainya |
+| Jam | Siapa | Isi pesan | Dipikirkan *(ilustrasi)* | Bagaimana Ayu menilainya |
 | --- | --- | --- | --- | --- |
 | 10.05 | Maya | Toko Raksasa dan toko lain mengeluh; diagnosis sudah ada di #4821 | Toko Raksasa penjual terbesar yang ia pegang, dan pemiliknya sudah menelepon dua kali. Ia tidak paham teknisnya, jadi menautkan #4821 supaya developer tidak mulai dari nol | Konteks: menyambung ke Issue #2 |
 | 10.20 | Eko | Matikan saja flag thumbnail-nya | Ia membaca #4821, melihat flag menyala tepat sebelum lambat, dan menyimpulkan flag itu biang masalahnya. Ia tidak tahu keputusan produk 12 Nov karena tidak ikut rapatnya | Solusi titipan; diperiksa terhadap paket konteks |
 | 10.40 | Dimas | Atau tambah server aplikasi | Di uji beban QA, menambah instance biasanya menurunkan p95. Ia mengira masalahnya kapasitas, bukan biaya per request | Solusi titipan; diperiksa terhadap paket konteks |
 
-Kolom "Dipikirkan" di tabel ini *(fiktif)*.
+Kolom "Dipikirkan" di tabel ini *(ilustrasi)*.
 
 - **Dilakukan.** Membuka Issue #5 dan PR #6. Menulis tiga prediksi di `JURNAL.md` **sebelum** mengukur apa pun (commit `d44210e`):
   1. Waktu habis di `thumbnailFor`, sekitar 1 detik untuk 60 produk.
@@ -374,10 +432,10 @@ Kolom "Dipikirkan" di tabel ini *(fiktif)*.
 
 ---
 
-## Bagian D. Sesudah penutupan *(fiktif)*
+## Bagian D. Sesudah penutupan (ilustrasi)
 
-Seluruh bagian ini fiksi yang masuk akal: tidak ada di Issue atau PR, tetapi setiap angka yang disebut berasal dari
-catatan nyata di atas.
+Seluruh bagian ini ilustrasi: tidak ada di Issue atau PR, tetapi setiap angka yang disebut berasal dari catatan nyata
+di atas.
 
 | Siapa | Yang dilakukan | Yang dipikirkan | Yang dipelajari |
 | --- | --- | --- | --- |
