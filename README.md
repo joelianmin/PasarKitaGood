@@ -1,16 +1,112 @@
-# PasarKitaGood: contoh pengerjaan tiket di dunia kerja
+# PasarKitaGood: belajar backend dan database lewat tiket
 
-Repo ini menunjukkan bagaimana sebuah tim backend mengerjakan tiket dengan baik, dari rencana sampai tiket ditutup:
-diagnosis dengan bukti, keputusan yang menghormati batasan bisnis, perubahan kode yang diuji, tinjauan rekan, dan
-catatan yang bisa diperiksa orang lain. **Kode, perintah, dan semua angka nyata**: diukur pada 20 dan 21 November 2026
-di komputer uji Intel Core i5-5250U (2 core, 4 thread), RAM 8 GB, macOS 12, tanpa Docker, data skala S.
+Di tempat kerja, sebagian besar pekerjaan backend datang sebagai **tiket**: laporan bahwa ada yang salah, ditulis oleh
+orang yang merasakan akibatnya, bukan oleh orang yang tahu penyebabnya. Repo ini mengajarkan backend dan database dengan
+cara itu. Dua tiket nyata dikerjakan sampai tuntas, lengkap dengan Issue, pull request, tinjauan rekan, dan bukti
+pengukuran, supaya kamu bisa melihat **bagaimana pekerjaan itu dilakukan dengan baik**.
 
 Repo ini dibuat dari repo induk [PasarKita](https://github.com/joelianmin/PasarKita), tempat mahasiswa mengerjakan tiket
-mereka sendiri. PasarKitaGood bukan tugas: ia teladan yang bisa dibandingkan dengan pekerjaanmu.
+mereka sendiri. PasarKitaGood bukan tugas; ia teladan untuk dibandingkan dengan pekerjaanmu.
 
-**Peran.** Satu akun GitHub memerankan tiga anggota tim: **Ayu** (pemilik tiket), **Bimo** dan **Citra** (peninjau).
-Tinjauan ditulis sebagai komentar bertanda peran, karena GitHub tidak mengizinkan penulis PR menyetujui PR-nya sendiri.
-Di tim sungguhan, setiap peninjau memakai akunnya sendiri dan menekan Approve.
+**Yang nyata:** kode, perintah, Issue, PR, commit, dan semua angka, diukur pada 20 dan 21 November 2026 di komputer uji
+Intel Core i5-5250U (2 core, 4 thread), RAM 8 GB, macOS 12, tanpa Docker, data skala S. **Peran:** satu akun GitHub
+memerankan tiga anggota tim, **Ayu** (pemilik tiket), **Bimo** dan **Citra** (peninjau). Tinjauan ditulis sebagai
+komentar bertanda peran, karena GitHub tidak mengizinkan penulis PR menyetujui PR-nya sendiri. Di tim sungguhan, setiap
+peninjau memakai akunnya sendiri dan menekan Approve.
+
+## PasarKita dalam satu menit
+
+PasarKita adalah layanan backend sebuah toko daring: penjual membuka toko, pembeli mencari produk, mengisi keranjang,
+membayar, dan menerima kiriman. Layanan ini satu aplikasi **Spring Boot** yang dibagi menjadi modul (*modulith*), dengan
+satu database **PostgreSQL**.
+
+```mermaid
+flowchart LR
+  subgraph app["Aplikasi PasarKita (Spring Boot, satu proses)"]
+    direction TB
+    catalog["catalog<br/>produk, profil toko"]
+    order["order, pricing,<br/>inventory, payment"]
+    lain["customer, invoice, loyalty,<br/>shipping, notification, ..."]
+  end
+  user["Pembeli, penjual,<br/>aplikasi mobile"] -->|HTTP| app
+  app -->|SQL| db[("PostgreSQL<br/>produk, penjual, pesanan,<br/>feature_flag")]
+  app -->|HTTP| ext["Layanan luar<br/>pajak, pembayaran, notifikasi<br/>(tiruan: WireMock)"]
+  app -->|metrik| prom["Prometheus"] --> graf["Grafana<br/>(grafik, jam UTC)"]
+  app -->|trace| tempo["Tempo"] --> graf
+```
+
+| Bagian | Fungsinya dalam pekerjaan sehari-hari |
+| --- | --- |
+| Aplikasi dan modulnya | Tempat kode diubah. Tiket di repo ini menyentuh modul `catalog` |
+| PostgreSQL | Tempat data. `pg_stat_statements` memperlihatkan query apa yang berjalan dan berapa lama |
+| Prometheus dan Grafana | Grafik waktu respons dan CPU per menit, untuk melihat **kapan** sesuatu berubah |
+| Tempo | Jejak satu request melewati bagian-bagian aplikasi |
+| k6 | Alat untuk mengirim beban tetap (misalnya 2 request per detik) dan mengukur waktu respons |
+
+Halaman yang dibahas di repo ini adalah **profil toko** (`GET /api/sellers/{id}/profile`). Jalurnya:
+
+```mermaid
+sequenceDiagram
+  participant K as Klien
+  participant C as SellerProfileController
+  participant F as FeatureFlags
+  participant D as PostgreSQL
+  participant T as ThumbnailService
+  K->>C: GET /api/sellers/1/profile
+  C->>D: cari penjual (1 query)
+  C->>F: flag seller.dynamic-thumbnail menyala?
+  C->>D: 60 produk pertama (1 query)
+  loop untuk setiap produk (sampai 60)
+    C->>T: thumbnailFor(id produk)
+    Note over T: di sinilah waktunya habis
+  end
+  C-->>K: data toko + 60 produk + alamat thumbnail
+```
+
+## Dua jenis tiket: diagnosis lalu perbaikan
+
+Bayangkan dokter. Pasien datang dengan keluhan "dada saya sakit". Dokter tidak langsung memberi obat: ia memeriksa dulu
+(**diagnosis**). Setelah penyebabnya jelas, ia menulis resep yang memperhatikan alergi dan kondisi pasien (**perbaikan
+dengan batasan**). Tim backend bekerja dengan urutan yang sama.
+
+| | Tiket diagnosis: **#4821** | Tiket perbaikan: **PK-200** |
+| --- | --- | --- |
+| Datang dari | Tim Dukungan Penjual, meneruskan keluhan penjual | Account Manager, setelah diagnosis ada, karena Toko Raksasa dan toko lain mengeluh |
+| Pertanyaannya | **Apa** yang terjadi, di lapisan mana, dan **mengapa**? | **Bagaimana** memperbaikinya tanpa melanggar keputusan dan batasan yang berlaku? |
+| Yang tidak boleh | Mengubah kode. Memperbaiki sebelum mengerti sering menutupi gejala | Memilih solusi tanpa memeriksa batasan: keputusan produk, kontrak dengan CDN, anggaran |
+| Hasilnya | Laporan dengan bukti dari beberapa sumber dan hipotesis bertanda "belum terbukti" | Perubahan kode, test, pengukuran ulang, bukti, dan komentar penutupan |
+| Di repo ini | Issue #2, PR #3, `LAPORAN-4821.md` | Issue #5, PR #6, `JURNAL.md` |
+
+Kenapa dipisah, tidak sekaligus? Di tempat kerja, diagnosis sering dikerjakan cepat oleh orang yang sedang bertugas,
+sedangkan perbaikan butuh keputusan dari pihak lain. Di sini, Product menolak fitur dimatikan, tim CDN melarang alamat
+gambar berubah, dan Tim Platform tidak punya anggaran server. Perbaikan yang baik baru bisa dipilih setelah penyebab
+diketahui **dan** batasan dibaca.
+
+## Cara kerja di dunia kerja
+
+| Tahap | Yang dilakukan tim | Label Issue | Contoh di repo ini |
+| --- | --- | --- | --- |
+| 1. Laporan masuk | Seseorang menulis gejala, biasanya tanpa penyebab | | Tiket #4821, tiket PK-200 |
+| 2. Triage | Pemilik tiket menulis ulang tiket dengan kata-katanya sendiri, menentukan ukuran dan penanggung jawab | `triage` | Issue #2, Issue #5 |
+| 3. Rencana | Pemilik menulis tujuan, risiko, dan rencana B sebelum mulai | | Issue #1 |
+| 4. Diagnosis | Mengukur patokan, mengumpulkan bukti dari beberapa sumber, menulis dugaan dan mengujinya | `diagnosis` | `LAPORAN-4821.md`, `JURNAL.md` |
+| 5. Perubahan | Membuka PR, menulis test lebih dulu, mengubah kode sekecil mungkin | | PR #6 |
+| 6. Tinjauan rekan | Dua rekan memeriksa hal yang berbeda dan menyebut apa yang mereka periksa | `review` | PR #3, PR #6 |
+| 7. Penutupan | Menulis akar masalah, batasan, alternatif, hasil, bukti, dan tindak lanjut untuk semua pemangku kepentingan | `selesai` | Penutupan Issue #2 dan #5 |
+
+Prinsip yang dipakai sepanjang jalan:
+
+- **Tulis dulu, baru bertindak.** Rencana, prediksi, dan alasan ditulis sebelum mengukur atau mengubah kode, supaya hasil
+  bisa membuktikan bahwa kita salah.
+- **Bukti, bukan opini.** Setiap klaim punya angka, satuan, jam, dan sumber yang bisa diperiksa orang lain.
+- **Perubahan kecil yang bisa dibatalkan.** PK-200 diperbaiki dengan mengubah satu berkas.
+- **Jaga perilaku yang sudah dijanjikan.** Respons, alamat, dan kontrak dengan tim lain tidak boleh berubah tanpa
+  kesepakatan; test membuktikannya.
+- **Komunikasi terbuka.** Rencana yang berubah, dugaan yang gugur, dan hal yang belum terjelaskan dicatat, bukan
+  disembunyikan.
+
+Yang disederhanakan di repo ini: tidak ada server produksi (semua diukur di komputer uji), tidak ada rilis sungguhan, dan
+satu akun memerankan tiga orang.
 
 ## Urutan membaca
 
@@ -33,8 +129,6 @@ di dalam cerita bertanggal Senin; di repo ini ia dibaca Sabtu 07.31 setelah pemb
 
 Urutan waktu lengkap, termasuk apa yang dipikirkan, dipertimbangkan, dan dipelajari setiap pemangku kepentingan (anggota
 tim, pelapor, Product, CDN, Platform): [`KRONOLOGI.md`](KRONOLOGI.md).
-
-Label tiket bergerak `triage` → `diagnosis` → `review` → `selesai`.
 
 ## Hasil singkat
 
