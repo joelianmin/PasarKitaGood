@@ -337,7 +337,7 @@ Ayu tidak bekerja selama jeda ini karena menunggu pembaruan templat. Ayu nanti m
 >
 > **Yang diharapkan**
 >
-> - p95 `GET /api/sellers/{id}/profile` pada 2 req/detik dengan flag `seller.dynamic-thumbnail` menyala tidak lebih dari dua kali p95 saat flag mati, diukur di laptop yang sama.
+> - p95 `GET /api/sellers/{id}/profile` pada 2 req/detik dengan flag `seller.dynamic-thumbnail` menyala tidak lebih dari dua kali p95 saat flag mati, diukur di komputer yang sama.
 > - Tidak ada request yang gagal pada 2 req/detik.
 > - Respons profil tidak berubah selama flag menyala.
 
