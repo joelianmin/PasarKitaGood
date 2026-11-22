@@ -6,7 +6,7 @@ mereka pelajari. Pembaca bisa memahaminya tanpa membuka berkas lain.
 
 ## Ringkasan
 
-**Aplikasinya.** PasarKita adalah aplikasi toko daring untuk lab mata kuliah backend (Spring Boot dan PostgreSQL). Salah
+**Aplikasinya.** PasarKita adalah layanan toko daring (Spring Boot dan PostgreSQL). Salah
 satu halamannya adalah **profil toko** (`GET /api/sellers/{id}/profile`). Halaman ini menampilkan data toko dan sampai 60
 produknya; setiap produk punya alamat gambar kecil (**thumbnail**).
 
@@ -51,6 +51,7 @@ thumbnail. Ayu mengujinya dulu, dan dugaannya ternyata salah.
 | req/detik | Jumlah request per detik, yaitu beban yang dikirim alat uji **k6** |
 | Patokan | Hasil ukur saat flag mati, sebagai pembanding |
 | Issue, PR | Halaman GitHub. Issue mencatat tiket dan diskusinya; PR (pull request) berisi perubahan yang ditinjau sebelum digabung |
+| Repo induk | Repo PasarKita, sumber kode dan tiket. Tim mengambil pembaruannya lewat PR (`git fetch templat`) |
 | Commit | Satu simpanan perubahan di Git, dikenali dengan kode pendek seperti `0f51d95` |
 | WIB, UTC | Zona waktu. WIB = UTC + 7 jam. Grafik pemantauan (Grafana) memakai UTC |
 
@@ -58,9 +59,9 @@ thumbnail. Ayu mengujinya dulu, dan dugaannya ternyata salah.
 
 | Siapa | Peran | Di cerita ini |
 | --- | --- | --- |
-| Ayu | Pemilik tiket, anggota kelompok | Ayu mengukur, mendiagnosis, dan memperbaiki |
-| Bimo | Peninjau 1, anggota kelompok | Bimo meninjau laporan dan perbaikan |
-| Citra | Peninjau 2, anggota kelompok | Citra meninjau hal yang tidak diperiksa Bimo |
+| Ayu | Pemilik tiket, anggota tim backend | Ayu mengukur, mendiagnosis, dan memperbaiki |
+| Bimo | Peninjau 1, anggota tim backend | Bimo meninjau laporan dan perbaikan |
+| Citra | Peninjau 2, anggota tim backend | Citra meninjau hal yang tidak diperiksa Bimo |
 | Tim Dukungan Penjual | Pelapor tiket #4821 | Tim ini meneruskan keluhan penjual |
 | Maya | Account Manager | Maya melapor di tiket PK-200 |
 | Eko | Senior Developer | Eko mengusulkan "matikan saja flag-nya" |
@@ -72,12 +73,13 @@ thumbnail. Ayu mengujinya dulu, dan dugaannya ternyata salah.
 
 ## Apa yang nyata dan apa yang ilustrasi
 
+- **Untuk siapa:** dokumen ini teladan praktik kerja bagi mahasiswa yang mengerjakan tiket di repo PasarKita.
 - **Nyata:** semua tindakan, jam, angka, kode, Issue, PR, dan commit. Setiap langkah menyebut sumbernya, dan pembaca bisa
   memeriksanya di repo ini.
 - **Teks asli:** dokumen ini mengutip isi tiket dan paket konteks secara utuh di titik waktunya.
 - **Ayu, Bimo, Citra:** satu akun GitHub memainkan ketiga peran ini. Pikiran mereka di dokumen ini disusun dari apa yang
   mereka tulis sendiri di Issue, PR, dan jurnal. Komentar tinjauan mereka hanya berjarak beberapa detik karena satu akun
-  mengirimnya berurutan; di kelompok sungguhan, peninjau butuh waktu.
+  mengirimnya berurutan; di tim sungguhan, peninjau butuh waktu.
 - **Tokoh lain** (Maya, Eko, Dimas, Bayu, Rudi, Tomi, Tim Platform, Tim Dukungan Penjual) hanya muncul di teks tiket dan
   paket konteks. Pesan mereka diambil apa adanya dari teks itu. Apa yang mereka pikirkan, pertimbangkan, dan pelajari
   adalah **ilustrasi**: penulis menambahkannya untuk membantu pembaca memahami sudut pandang mereka. Ilustrasi itu masuk
@@ -182,14 +184,14 @@ Tiga dokumen ini sudah ada sebelum siapa pun membuka tiket. Ketiganya nanti mene
 
 ### 19.10 sampai 19.13: Ayu menyiapkan kerja sebelum mengukur
 
-- **Dilakukan.** Ayu membuat repo dari templat (19.10). Ayu menulis rencana sesi di Issue #1 dan menulis ulang tiket
-  #4821 dengan kata-katanya sendiri di Issue #2 (19.12). Ayu membuka PR #3 sebagai draf dan memulai laporan dari templat
-  (19.13).
+- **Dilakukan.** Ayu membuat repo kerja dari repo induk PasarKita (19.10). Ayu menulis rencana sesi di Issue #1 dan menulis ulang tiket
+  #4821 dengan kata-katanya sendiri di Issue #2 (19.12). Ayu membuka PR #3 sebagai draf dan memulai laporan dari format
+  laporan baku tim (19.13).
 - **Dipikirkan.** Ayu menilai risiko terbesarnya bukan kode, melainkan tiga hal: komputer uji bisa kewalahan saat flag
-  menyala, beban latar (`task traffic`) bisa mencampuri angka k6, dan pembaruan templat untuk PK-200 belum tersedia.
+  menyala, beban latar (`task traffic`) bisa mencampuri angka k6, dan pembaruan repo induk untuk PK-200 belum tersedia.
 - **Dipertimbangkan.** Untuk setiap risiko, Ayu menulis **tanda** yang bisa diamati dan **rencana B**. Bila k6 mencatat
   request gagal, Ayu menurunkan beban ke `RATE=1`. Ayu memakai beban latar hanya untuk grafik dan menghentikannya sebelum
-  k6. Bila folder lab PK-200 belum ada, Ayu membaca jurnal dan kode lebih dulu.
+  k6. Bila folder tiket PK-200 belum ada, Ayu membaca jurnal dan kode lebih dulu.
 - **Dugaan awal.** Di Issue #2, Ayu menulis dua dugaan yang ditandai belum terbukti: query produk untuk toko besar lambat,
   atau ada perubahan konfigurasi.
 - **Sumber.** Issue #1, Issue #2, PR #3, commit `c9a2714`, `df59a69`
@@ -203,7 +205,8 @@ Tiga dokumen ini sudah ada sebelum siapa pun membuka tiket. Ketiganya nanti mene
 
 ### 19.18.58: flag dinyalakan (`task latihan:mulai`)
 
-- **Dilakukan.** Ayu menjalankan `task latihan:mulai`, yang menyalakan flag dan memulai skenario latihan. Ayu mencatat
+- **Dilakukan.** Ayu menjalankan `task latihan:mulai`, yang menyalakan flag untuk mereproduksi keadaan saat tiket
+  dilaporkan. Ayu mencatat
   jamnya dalam WIB dan UTC (12.18.58 UTC), lalu menjalankan beban latar (`task traffic`) untuk grafik.
 - **Dipikirkan.** Ayu tahu bahwa Grafana memakai UTC. Dengan mencatat jam di dua zona, Ayu tidak salah membaca grafik.
 
@@ -302,23 +305,23 @@ Tiga dokumen ini sudah ada sebelum siapa pun membuka tiket. Ketiganya nanti mene
 
 - **Dilakukan.** Ayu menulis komentar penutupan di Issue #2 (akar masalah sebagai hipotesis kuat, tabel sinyal, dan tindak
   lanjut ke PK-200) dan komentar **Cek 19.44** di Issue #1.
-- **Hambatan yang dicatat.** Ayu mencatat bahwa pembaruan templat (`labs/pk-200`) belum tersedia, sehingga rencana B
+- **Hambatan yang dicatat.** Ayu mencatat bahwa pembaruan repo induk (`labs/pk-200`) belum tersedia, sehingga rencana B
   ketiga berlaku.
 - **Sumber.** Issue #2, Issue #1
 
 ### 19.45 Jumat sampai 07.30 Sabtu: jeda
 
-Ayu tidak bekerja selama jeda ini karena menunggu pembaruan templat. Ayu nanti mencatat jeda ini secara terbuka di komentar
+Ayu tidak bekerja selama jeda ini karena menunggu pembaruan repo induk. Ayu nanti mencatat jeda ini secara terbuka di komentar
 **Perubahan**.
 
 ---
 
 ## Bagian C. Sabtu 21 November 2026: perbaikan PK-200
 
-### 07.30: Ayu mengambil pembaruan templat (PR #4)
+### 07.30: Ayu mengambil pembaruan repo induk (PR #4)
 
 - **Dilakukan.** Ayu mengikuti `docs/PANDUAN-PEMBARUAN.md`: Ayu mengambil pembaruan lewat cabang baru dan PR.
-- **Dipikirkan.** Ayu menjaga agar pembaruan tidak menimpa pekerjaan kelompok.
+- **Dipikirkan.** Ayu menjaga agar pembaruan tidak menimpa pekerjaan tim.
 - **Diperiksa Bimo.** Bimo memastikan bahwa 9 berkas yang berubah semuanya ada di `labs/` dan `docs/`, berkas alat tidak
   berubah, dan `LAPORAN-4821.md` serta `group.env` tidak tersentuh. Bimo menyetujui.
 - **Sumber.** PR #4, commit `07902d1`
@@ -395,7 +398,7 @@ Pesan di dalam tiket (di dalam cerita, hari Senin):
 - **Dipikirkan.** Ayu menyadari bahwa sebelum uji 255 warna, ia hampir menolak alternatif D karena prediksi 3. Tanpa uji
   itu, Ayu akan memilih C.
 - **Dilakukan juga.** Ayu menulis komentar **Perubahan 07.47** di Issue #1. Komentar itu mencatat apa yang berubah (sesi
-  terbelah semalam), pemicunya (pembaruan templat terlambat), dan apa yang dikorbankan (tidak ada tiket yang dibatalkan,
+  terbelah semalam), pemicunya (pembaruan repo induk terlambat), dan apa yang dikorbankan (tidak ada tiket yang dibatalkan,
   tetapi angka Jumat dan Sabtu harus dibandingkan dengan hati-hati).
 - **Sumber.** `JURNAL.md` bagian Alternatif, Issue #1
 
@@ -439,7 +442,7 @@ Pesan di dalam tiket (di dalam cerita, hari Senin):
   belum diukur di skala M, dan tabel `feature_flag` yang tidak menyimpan waktu perubahan. Setelah itu Ayu menulis
   **Refleksi** dan menutup Issue #1.
 - **Dipelajari (dari refleksi Ayu).**
-  - Ayu menemukan bahwa yang paling meleset bukan perkiraan ukuran tiket, tetapi ketergantungan pada pembaruan templat.
+  - Ayu menemukan bahwa yang paling meleset bukan perkiraan ukuran tiket, tetapi ketergantungan pada pembaruan repo induk.
   - Ayu menilai langkah paling berguna adalah menguji prediksi 3 sebelum memilih perbaikan.
   - Ke depan, Ayu akan menulis "folder lab belum ada setelah `git fetch templat`" sebagai risiko tersendiri di setiap
     rencana.

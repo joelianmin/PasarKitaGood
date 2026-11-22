@@ -1,12 +1,16 @@
-# PasarKitaGood: contoh ideal pengerjaan tiket
+# PasarKitaGood: contoh pengerjaan tiket di dunia kerja
 
-Repo ini dibuat dari templat [PasarKita](https://github.com/joelianmin/PasarKita) dan dikerjakan seperti repo kelompok,
-dari rencana sampai tiket ditutup. **Kode, perintah, dan semua angka nyata**: diukur pada 20 dan 21 November 2026 di
-laptop Intel Core i5-5250U (2 core, 4 thread), RAM 8 GB, macOS 12, tanpa Docker, data skala S.
+Repo ini menunjukkan bagaimana sebuah tim backend mengerjakan tiket dengan baik, dari rencana sampai tiket ditutup:
+diagnosis dengan bukti, keputusan yang menghormati batasan bisnis, perubahan kode yang diuji, tinjauan rekan, dan
+catatan yang bisa diperiksa orang lain. **Kode, perintah, dan semua angka nyata**: diukur pada 20 dan 21 November 2026
+di komputer uji Intel Core i5-5250U (2 core, 4 thread), RAM 8 GB, macOS 12, tanpa Docker, data skala S.
 
-**Peran contoh.** Satu akun GitHub memerankan tiga anggota kelompok: **Ayu** (pemilik tiket), **Bimo** dan **Citra**
-(peninjau). Tinjauan ditulis sebagai komentar bertanda peran, karena GitHub tidak mengizinkan penulis PR menyetujui
-PR-nya sendiri. Di kelompokmu, peninjau memakai akunnya sendiri dan menekan Approve.
+Repo ini dibuat dari repo induk [PasarKita](https://github.com/joelianmin/PasarKita), tempat mahasiswa mengerjakan tiket
+mereka sendiri. PasarKitaGood bukan tugas: ia teladan yang bisa dibandingkan dengan pekerjaanmu.
+
+**Peran.** Satu akun GitHub memerankan tiga anggota tim: **Ayu** (pemilik tiket), **Bimo** dan **Citra** (peninjau).
+Tinjauan ditulis sebagai komentar bertanda peran, karena GitHub tidak mengizinkan penulis PR menyetujui PR-nya sendiri.
+Di tim sungguhan, setiap peninjau memakai akunnya sendiri dan menekan Approve.
 
 ## Urutan membaca
 
@@ -28,7 +32,7 @@ Teks tiket #4821 sudah ada di repo sejak awal; jam laporannya (19.28) adalah jam
 di dalam cerita bertanggal Senin; di repo ini ia dibaca Sabtu 07.31 setelah pembaruan templat diambil.
 
 Urutan waktu lengkap, termasuk apa yang dipikirkan, dipertimbangkan, dan dipelajari setiap pemangku kepentingan (anggota
-kelompok, pelapor, Product, CDN, Platform): [`KRONOLOGI.md`](KRONOLOGI.md).
+tim, pelapor, Product, CDN, Platform): [`KRONOLOGI.md`](KRONOLOGI.md).
 
 Label tiket bergerak `triage` → `diagnosis` → `review` → `selesai`. Tiket berikutnya ditambahkan setelah tenggatnya lewat.
 
