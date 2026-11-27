@@ -110,7 +110,7 @@ satu akun memerankan tiga orang.
 
 ## Urutan membaca
 
-Diurutkan menurut waktu, dari tiket dan dokumen konteks yang sudah ada sampai tiket ditutup.
+Diurutkan menurut waktu, dari tiket dan dokumen konteks yang sudah ada sampai tiket ditutup. Baris 1 sampai 9: #4821 dan PK-200 (20–21 Nov). Baris 10 sampai 12: PK-300 (27 Nov).
 
 | # | Kapan | Apa | Tempat | Yang patut ditiru / diperhatikan |
 | --- | --- | --- | --- | --- |
@@ -123,6 +123,9 @@ Diurutkan menurut waktu, dari tiket dan dokumen konteks yang sudah ada sampai ti
 | 7 | Sabtu 21 Nov, 07.30 | Mengambil pembaruan repo induk | [PR #4](https://github.com/joelianmin/PasarKitaGood/pull/4) | Pembaruan masuk lewat PR, tanpa menyentuh pekerjaan tim |
 | 8 | Sabtu 21 Nov, 07.31 | Tiket PK-200 (Maya, Eko, Dimas) | [`labs/pk-200/LAB.md`](labs/pk-200/LAB.md) | Dua usul di tiket adalah solusi titipan; nilai terhadap paket konteks (baris 1 sampai 3) |
 | 9 | Sabtu 21 Nov, 07.31 sampai 07.59 | Perbaikan PK-200 | [Issue #5](https://github.com/joelianmin/PasarKitaGood/issues/5), [PR #6](https://github.com/joelianmin/PasarKitaGood/pull/6), [`JURNAL.md`](labs/pk-200/JURNAL.md) | Prediksi sebelum mengukur; batasan dari paket konteks; prediksi yang salah diuji (255 warna); test patokan ditulis sebelum kode diubah; `task evidence` dari commit bersih; komentar penutupan lengkap |
+| 10 | 1 Jan, 2 Nov, 22 Nov 2026 | Paket konteks PK-300: aturan pajak, thread tim pajak, rekap pajak | [`labs/pk-300/konteks/`](labs/pk-300/konteks/) | Batasan keras: tarif tidak boleh ditebak, transaksi tanpa tarif tidak boleh selesai, koreksi data lama oleh Keuangan |
+| 11 | Jumat 27 Nov, 09.30 | Mengambil pembaruan repo induk (tiket 27 Nov – 3 Des) | [PR #19](https://github.com/joelianmin/PasarKitaGood/pull/19) | Peninjau mengoreksi komentarnya sendiri secara terbuka setelah salah membaca hasil pemeriksaan |
+| 12 | Jumat 27 Nov, 09.54 sampai 10.32 | Perbaikan PK-300 (Lestari, Bayu, Pak Hendra) | [Issue #20](https://github.com/joelianmin/PasarKitaGood/issues/20), [Issue #21](https://github.com/joelianmin/PasarKitaGood/issues/21), [PR #22](https://github.com/joelianmin/PasarKitaGood/pull/22), [`JURNAL.md`](labs/pk-300/JURNAL.md) | Bug kebenaran data: test yang **gagal pada kode lama** lebih dulu; prediksi yang salah (keranjang hilang) diuji sebelum menulis kode; hasil dicek di database, bukan hanya dari respons; query data lama tanpa mengubah data |
 
 Teks tiket #4821 sudah ada di repo sejak awal; jam laporannya (19.28) adalah jam yang dicetak `task latihan:mulai`. Tiket PK-200
 di dalam cerita bertanggal Senin; di repo ini ia dibaca Sabtu 07.31 setelah pembaruan repo induk diambil.
