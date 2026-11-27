@@ -23,8 +23,47 @@ Waktu menulis (WIB): `09.55`, sebelum mengukur apa pun untuk PK-300.
 
 ## 2. Daftar asumsi dan batasan
 
+> Satu baris per batasan dari paket konteks. Jenis: **keras** (kebijakan, kontrak, SLA, keputusan resmi), **konteks**, **pendapat**, atau **tidak relevan** (tulis alasannya).
+
+| Batasan | Sumber (berkas dan bagian) | Jenis | Dampak pada pilihan |
+| --- | --- | --- | --- |
+| Tarif ditentukan layanan pajak; aplikasi tidak boleh menetapkan, menebak, atau memakai tarif cadangan | `konteks/01-aturan-pajak.md` poin 1 | Keras | Usul Pak Hendra (pakai 11%) tidak boleh |
+| Salah pungut, terlalu rendah maupun terlalu tinggi, didenda; 11% hanya untuk sebagian kategori | `konteks/01-aturan-pajak.md` poin 2 | Keras | Tarif 0 dan tarif tebakan sama-sama salah |
+| Transaksi tanpa tarif tidak boleh selesai; pelanggan diberi tahu; keranjang tidak boleh hilang | `konteks/01-aturan-pajak.md` poin 3 | Keras | Perbaikan: tolak checkout dengan pesan jelas, keranjang tetap |
+| Koreksi pesanan lama dikerjakan Tim Keuangan; tim teknis cukup menyerahkan daftar | `konteks/01-aturan-pajak.md` poin 4 | Keras | PR tidak mengubah data lama, hanya menyerahkan query |
+| Untuk kategori baru, layanan pajak membalas 200 dengan `"rate": null` sampai tarif ditetapkan (perkiraan pertengahan Desember) | `konteks/02-thread-tim-pajak.md` (Yoga, 10.15) | Konteks | `null` berarti "tarif belum ada", bukan error jaringan |
+| Layanan pajak kadang membalas 5xx saat pemeliharaan, Minggu dini hari, kurang dari 10 menit | `konteks/02-thread-tim-pajak.md` (Yoga, 10.42) | Konteks | Di luar gejala tiket ini (lihat catatan pengukuran); masuk tindak lanjut |
+| Pajak Rp0 baru muncul November; Oktober nol | `konteks/03-rekap-pajak-november.md` | Konteks | Cocok dengan kategori baru mulai 1 November |
+| Selisih pembulatan Rp1 | `konteks/03-rekap-pajak-november.md` | Tidak relevan | Sudah diterima auditor sejak 2025 |
+
 ## 3. Triage sinyal
 
+> Satu baris per sinyal di tiket. Kategori: gejala utama, akibat, kebetulan waktu, noise, dugaan keliru, solusi titipan.
+
+| Sinyal | Kategori | Alasan dan bukti |
+| --- | --- | --- |
+| Pesanan November berpajak Rp0, padahal produknya kena pajak (Lestari) | Gejala utama | Pengukuran di bagian 4 |
+| "Belum tahu sejak kapan" (Lestari) | Konteks | Rekap: mulai November, bersamaan dengan kategori baru 1 November |
+| "Nilainya kecil, abaikan dulu" (Bayu) | Dugaan keliru | Rp61,3 juta sampai 22 Nov dan salah pungut didenda (aturan pajak poin 2) |
+| "Kalau tarif kosong, pakai saja 11%" (Pak Hendra) | Solusi titipan | Melanggar aturan pajak poin 1 dan 2 |
+
 ## 4. Catatan pengukuran
+
+> Urut waktu. Tiap baris: jam (WIB), apa yang diukur, hasil (angka dan satuan), lokasi bukti.
+
+Komputer uji: Intel Core i5-5250U (2 core, 4 thread), RAM 8 GB, macOS 12, tanpa Docker, data skala S. Skrip: `task reproduce LAB=pk-300` (2 iterasi/detik, 3 menit, sekitar 20% produk tanpa tarif), didahului `task lab:siapkan LAB=pk-300` sebelum tiap run.
+
+- **Jalur kode dibaca:** `CheckoutService.checkout` memanggil `PricingService.quote`, yang memanggil `TaxClient.rateFor` sekali per baris keranjang. `TaxClient.rateFor` mengembalikan `BigDecimal.ZERO` bila jawaban kosong atau `rate` bernilai `null` (`TaxClient.java` baris 23).
+- **Layanan pajak:** `GET /tax/rate?productId=1200` dan `4300` membalas `{"rate":null}`; `1201` membalas `{"rate":0.11}`. `labs/pk-300/produk-tanpa-tarif.k6.js` menemukan 50 dari 5.000 produk tanpa tarif. Script ini dijalankan sekali saat run patokan berlangsung (sekitar 10.05 WIB, 100 permintaan ke layanan tiruan); pengaruhnya pada waktu respons tidak diukur.
+- **Prediksi 1 benar:** layanan pajak membalas `null`, kode mengubahnya menjadi tarif 0.
+- **Patokan (kode lama), 09.58 sampai 10.10 WIB:** pemanasan dibuang, lalu tiga run.
+
+| Run (mulai WIB) | Bertarif p50 / p95 (ms) | Bertarif: 200 / 409 | Tanpa tarif: 200 / 409 | Pesanan berpajak Rp0 di database |
+| --- | --- | --- | --- | --- |
+| 1 (10.01.36) | 317 / 369 | 288 / 0 | 72 / 1 | 72 |
+| 2 (10.04.39) | 321 / 388 | 288 / 0 | 67 / 6 | 67 |
+| 3 (10.07.42) | 318 / 346 | 288 / 0 | 72 / 0 | 72 |
+
+  409 berarti stok produk acak itu habis, bukan masalah pajak. Jumlah pesanan berpajak Rp0 dihitung per jendela jam run, dan sama dengan jumlah checkout produk tanpa tarif yang berhasil. Median p95 produk bertarif: **369 ms**, jadi target sesudah perbaikan: ≤ 1,1 × 369 = **406 ms**.
 
 ## 5. Dugaan awal vs temuan (isi di akhir)
