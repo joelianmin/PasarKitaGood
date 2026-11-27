@@ -1,0 +1,17 @@
+{
+  "request": {
+    "method": "POST",
+    "urlPath": "/tax/rates"
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "body": "{\"rates\": { {{#each (jsonPath request.body '$.productIds') as |id|}}{{#unless @first}}, {{/unless}}\"{{id}}\": {{#if (matches id '[0-9]*00')}}null{{else}}0.11{{/if}}{{/each}} } }",
+    "fixedDelayMilliseconds": 50,
+    "transformers": [
+      "response-template"
+    ]
+  }
+}

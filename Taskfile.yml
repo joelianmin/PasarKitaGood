@@ -103,7 +103,7 @@ tasks:
           PROFILE: core,observability
       - task: seed
         vars:
-          SCALE: '{{if eq (.LAB | lower) "pk-204" "pk-206"}}L{{else if eq (.LAB | lower) "0" "pk-201" "pk-202" "pk-203" "pk-205" "pk-207" "pk-208"}}M{{else}}S{{end}}'
+          SCALE: '{{if eq (.LAB | lower) "pk-204" "pk-206"}}L{{else if eq (.LAB | lower) "0" "pk-201" "pk-202" "pk-203" "pk-205" "pk-207" "pk-208" "pk-303" "pk-304" "pk-305" "pk-306"}}M{{else}}S{{end}}'
 
   reproduce:
     desc: Jalankan script beban satu lab, contoh LAB=0
@@ -131,6 +131,28 @@ tasks:
       vars: [NAME, ON]
     cmds:
       - '{{.COMPOSE}} exec -T postgres psql -U pasarkita -d pasarkita -c "UPDATE feature_flag SET enabled = {{.ON}} WHERE name = ''{{.NAME}}''"'
+
+  lab:siapkan:
+    desc: Isi data khusus satu lab (labs/<lab>/siapkan.sql), contoh LAB=pk-301. Ulangi sebelum tiap run
+    requires:
+      vars: [LAB]
+    cmds:
+      - java tools/CekJdk.java
+      - java tools/SiapkanLab.java {{.LAB}}
+
+  chaos:
+    desc: Nyalakan gangguan layanan luar tiruan, contoh SCENARIO=gateway-hang atau SCENARIO=email-error
+    requires:
+      vars: [SCENARIO]
+    cmds:
+      - java tools/CekJdk.java
+      - java tools/Chaos.java mulai {{.SCENARIO}}
+
+  chaos:selesai:
+    desc: Matikan semua gangguan layanan luar tiruan
+    cmds:
+      - java tools/CekJdk.java
+      - java tools/Chaos.java selesai
 
   latihan:mulai:
     desc: Latihan membedah tiket, nyalakan kondisi latihan (setelah ada aba-aba pengajar)
