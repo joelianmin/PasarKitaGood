@@ -94,7 +94,7 @@ Dipilih **D**. E dicatat sebagai tindak lanjut untuk Product: pelanggan sebaikny
 
   Median p95 produk bertarif **355 ms** (patokan 369 ms). Checkout produk tanpa tarif sekarang ditolak dalam sekitar 60 ms, karena berhenti sebelum stok, gateway, dan notifikasi.
 - **10.27 WIB:** `task evidence LAB=pk-300` dari commit `3012ece` dengan pohon kerja bersih (jurnal disimpan sementara dengan `git stash`), hash `35e75cea...029bedfe`.
-- **10.29 WIB, pesanan lama:** `produk-tanpa-tarif.k6.js` (50 produk), lalu `pesanan-terdampak.sql`: **448 pesanan** sejak 1 November. 166 berasal dari riwayat data (termasuk 2 pesanan seed bertanggal 27 November dini hari), 282 dibuat oleh run patokan sebelum perbaikan (71 + 72 + 67 + 72). Query tidak mengubah data; daftar diserahkan ke Tim Keuangan.
+- **10.28 WIB, pesanan lama:** `produk-tanpa-tarif.k6.js` (50 produk), lalu `pesanan-terdampak.sql`: **448 pesanan** sejak 1 November. 166 berasal dari riwayat data (termasuk 2 pesanan seed bertanggal 27 November dini hari), 282 dibuat oleh run patokan sebelum perbaikan (71 + 72 + 67 + 72). Query tidak mengubah data; daftar diserahkan ke Tim Keuangan.
 
 | Target tiket | Hasil | Terpenuhi? |
 | --- | --- | --- |
