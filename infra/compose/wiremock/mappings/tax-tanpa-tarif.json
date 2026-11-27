@@ -1,0 +1,14 @@
+{
+  "priority": 4,
+  "request": {
+    "method": "GET",
+    "urlPath": "/tax/rate",
+    "queryParameters": { "productId": { "matches": "[0-9]*00" } }
+  },
+  "response": {
+    "status": 200,
+    "headers": { "Content-Type": "application/json" },
+    "jsonBody": { "rate": null },
+    "fixedDelayMilliseconds": 40
+  }
+}
