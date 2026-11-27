@@ -20,7 +20,11 @@ class TaxClient {
                 .uri("/tax/rate?productId={id}", productId)
                 .retrieve()
                 .body(TaxRate.class);
-        return rate == null || rate.rate() == null ? BigDecimal.ZERO : rate.rate();
+        if (rate == null || rate.rate() == null) {
+            // Tarif belum ditetapkan untuk kategori produk ini. Jangan dianggap 0 dan jangan ditebak (aturan pajak).
+            throw new TaxRateUnavailableException(productId);
+        }
+        return rate.rate();
     }
 
     record TaxRate(BigDecimal rate) {
