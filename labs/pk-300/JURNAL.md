@@ -66,4 +66,43 @@ Komputer uji: Intel Core i5-5250U (2 core, 4 thread), RAM 8 GB, macOS 12, tanpa 
 
   409 berarti stok produk acak itu habis, bukan masalah pajak. Jumlah pesanan berpajak Rp0 dihitung per jendela jam run, dan sama dengan jumlah checkout produk tanpa tarif yang berhasil. Median p95 produk bertarif: **369 ms**, jadi target sesudah perbaikan: ≤ 1,1 × 369 = **406 ms**.
 
+## Alternatif
+
+| Alternatif | Akar masalah | Batasan | Biaya dan risiko | Bisa dibatalkan |
+| --- | --- | --- | --- | --- |
+| A. Abaikan dulu (Bayu) | Tidak | **Melanggar** aturan pajak poin 2 (denda) dan 3 | Pajak tak terpungut terus bertambah | - |
+| B. Pakai 11% bila tarif kosong (Pak Hendra) | Menutupi | **Melanggar** aturan pajak poin 1 dan 2: tarif ditebak, 11% hanya sebagian kategori | Salah pungut ke atas juga didenda | Mudah |
+| C. Simpan pesanan dengan status "menunggu tarif" | Sebagian | **Melanggar** aturan pajak poin 3: transaksi tanpa tarif tidak boleh diselesaikan | Saldo dan stok sudah berkurang untuk pesanan yang belum sah | Sulit |
+| D. Tolak checkout dengan kode status dan pesan jelas | **Ya**: tarif kosong tidak lagi dianggap 0 | Terpenuhi: tidak menebak, tidak menyelesaikan, keranjang tetap | Pelanggan belum bisa membeli produk itu sampai tarif ditetapkan (perkiraan pertengahan Desember) | Mudah (dua berkas) |
+| E. Sembunyikan produk tanpa tarif dari katalog | Mencegah, tidak memperbaiki | Terpenuhi | Katalog harus bertanya ke layanan pajak untuk setiap produk; tetap butuh D sebagai pengaman | Sedang |
+
+Dipilih **D**. E dicatat sebagai tindak lanjut untuk Product: pelanggan sebaiknya tahu sebelum checkout.
+
+## Perbaikan dan pengukuran ulang
+
+- **10.12 WIB:** commit `d930833` menambah `TaxClientTest` (4 test) dan `TaxRateUnavailableException` yang belum dipakai. Pada kode lama: **3 dari 4 gagal** ("Expecting code to raise a throwable"); test produk bertarif lulus.
+- **10.13 WIB:** commit `3012ece`: `TaxClient` melempar `TaxRateUnavailableException` untuk tarif `null` atau jawaban tanpa tarif; `CheckoutController` menjawab 422 dengan `ProblemDetail`. Test yang sama: **4 dari 4 lulus**; `ThumbnailServiceTest` (PK-200) dan `ModularityTests` tetap lulus.
+- **10.14 WIB:** aplikasi dijalankan ulang dari cabang `pk-300`.
+- **Prediksi 2 diuji:** pelanggan 6999, keranjang berisi produk 1200, checkout: 422 `{"title":"Tarif pajak belum tersedia","detail":"Produk 1200 belum bisa dibeli: tarif pajaknya belum tersedia.","productId":1200}`. Keranjang sebelum 1 item, sesudah 1 item; pesanan baru 0. **Salah:** checkout berjalan dalam satu transaksi, jadi penghapusan keranjang ikut dibatalkan. Tidak perlu langkah tambahan.
+- **10.14 sampai 10.27 WIB, kode baru, flag dan data sama:** pemanasan dibuang, lalu tiga run.
+
+| Run (mulai WIB) | Bertarif p50 / p95 (ms) | Bertarif: 200 / 409 | Tanpa tarif: 200 / 422 | Pesanan berpajak Rp0 di database |
+| --- | --- | --- | --- | --- |
+| 1 (10.18.02) | 315 / 400 | 288 / 0 | 0 / 72 | 0 |
+| 2 (10.21.07) | 315 / 346 | 286 / 2 | 0 / 72 | 0 |
+| 3 (10.24.10) | 314 / 355 | 287 / 1 | 0 / 73 | 0 |
+
+  Median p95 produk bertarif **355 ms** (patokan 369 ms). Checkout produk tanpa tarif sekarang ditolak dalam sekitar 60 ms, karena berhenti sebelum stok, gateway, dan notifikasi.
+- **10.27 WIB:** `task evidence LAB=pk-300` dari commit `3012ece` dengan pohon kerja bersih (jurnal disimpan sementara dengan `git stash`), hash `35e75cea...029bedfe`.
+- **10.29 WIB, pesanan lama:** `produk-tanpa-tarif.k6.js` (50 produk), lalu `pesanan-terdampak.sql`: **448 pesanan** sejak 1 November. 166 berasal dari riwayat data (termasuk 2 pesanan seed bertanggal 27 November dini hari), 282 dibuat oleh run patokan sebelum perbaikan (71 + 72 + 67 + 72). Query tidak mengubah data; daftar diserahkan ke Tim Keuangan.
+
+| Target tiket | Hasil | Terpenuhi? |
+| --- | --- | --- |
+| Tidak ada pesanan baru berpajak Rp0 untuk produk tanpa tarif | 0 di ketiga run (sebelumnya 72, 67, 72) | Ya |
+| Checkout ditolak dengan kode status dan pesan jelas, keranjang tetap | 422 dengan pesan yang menyebut produk; keranjang tetap 1 item | Ya |
+| Produk bertarif tetap berhasil, p95 ≤ 1,1 × patokan | 200; 355 ms ≤ 406 ms | Ya |
+| Pesanan lama ditemukan dengan satu query | `pesanan-terdampak.sql`: 448 pesanan | Ya |
+
 ## 5. Dugaan awal vs temuan (isi di akhir)
+
+Prediksi 1 (tarif kosong dianggap 0) **benar**, terlihat langsung di `TaxClient`. Prediksi 2 (keranjang hilang bila checkout ditolak) **salah**: seluruh checkout satu transaksi, jadi penolakan membatalkan penghapusan keranjang juga; tanpa mengujinya, saya akan menambah kode penyimpan keranjang yang tidak perlu. Prediksi 3 (waktu produk bertarif tidak berubah) **benar**: 369 lalu 355 ms, selisih dalam variasi antar run.
