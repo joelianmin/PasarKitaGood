@@ -1,4 +1,4 @@
-# Kronologi tiket #4821 dan PK-200
+# Kronologi tiket #4821, PK-200, dan PK-300
 
 Dokumen ini menceritakan, menurut urutan waktu, bagaimana satu masalah kinerja ditemukan, didiagnosis, dan diperbaiki
 di aplikasi PasarKita. Dokumen ini mencatat siapa melakukan apa, apa yang mereka pikirkan dan pertimbangkan, dan apa yang
@@ -70,6 +70,9 @@ thumbnail. Ayu mengujinya dulu, dan dugaannya ternyata salah.
 | Rudi | Front-end | Rudi menjelaskan cara kerja CDN dan ukuran gambar di layar |
 | Tomi | Pemantauan | Tomi mengingatkan lonjakan biaya CDN sebelumnya |
 | Tim Platform | Pengelola anggaran infrastruktur | Tim ini menyusun anggaran tanpa server tambahan |
+| Lestari | Tim Keuangan | Lestari melapor di tiket PK-300 |
+| Yoga | Tim Integrasi Pajak | Yoga menjelaskan arti tarif `null` |
+| Pak Hendra | Senior Developer | Pak Hendra mengusulkan "pakai saja 11%" di PK-300 |
 
 ## Apa yang nyata dan apa yang ilustrasi
 
@@ -80,7 +83,7 @@ thumbnail. Ayu mengujinya dulu, dan dugaannya ternyata salah.
 - **Ayu, Bimo, Citra:** satu akun GitHub memainkan ketiga peran ini. Pikiran mereka di dokumen ini disusun dari apa yang
   mereka tulis sendiri di Issue, PR, dan jurnal. Komentar tinjauan mereka hanya berjarak beberapa detik karena satu akun
   mengirimnya berurutan; di tim sungguhan, peninjau butuh waktu.
-- **Tokoh lain** (Maya, Eko, Dimas, Bayu, Rudi, Tomi, Tim Platform, Tim Dukungan Penjual) hanya muncul di teks tiket dan
+- **Tokoh lain** (Maya, Eko, Dimas, Bayu, Rudi, Tomi, Tim Platform, Tim Dukungan Penjual, Lestari, Yoga, Pak Hendra) hanya muncul di teks tiket dan
   paket konteks. Pesan mereka diambil apa adanya dari teks itu. Apa yang mereka pikirkan, pertimbangkan, dan pelajari
   adalah **ilustrasi**: penulis menambahkannya untuk membantu pembaca memahami sudut pandang mereka. Ilustrasi itu masuk
   akal, tidak bertentangan dengan fakta, dan ditandai *(ilustrasi)*.
@@ -91,7 +94,8 @@ thumbnail. Ayu mengujinya dulu, dan dugaannya ternyata salah.
 2. [Jumat 20 November: diagnosis #4821](#bagian-b-jumat-20-november-2026-diagnosis-4821)
 3. [Sabtu 21 November: perbaikan PK-200](#bagian-c-sabtu-21-november-2026-perbaikan-pk-200)
 4. [Sesudah tiket ditutup](#bagian-d-sesudah-penutupan-ilustrasi)
-5. [Ringkasan pelajaran](#ringkasan-pelajaran)
+5. [Jumat 27 November: perbaikan PK-300](#bagian-e-jumat-27-november-2026-perbaikan-pk-300)
+6. [Ringkasan pelajaran](#ringkasan-pelajaran)
 
 Semua jam dalam **WIB**, kecuali ditandai UTC.
 
@@ -481,6 +485,161 @@ catatan nyata di atas.
 
 ---
 
+## Bagian E. Jumat 27 November 2026: perbaikan PK-300
+
+PK-300 adalah tiket contoh minggu 27 November – 3 Desember. Gejalanya bukan lambat, melainkan **data yang salah**: pesanan
+tersimpan tanpa pajak. Pemiliknya tetap Ayu, peninjaunya Bimo dan Citra.
+
+**Ringkasnya:** sejak 1 November, layanan pajak membalas tarif `null` untuk kategori produk baru yang tarifnya belum
+ditetapkan, dan kode aplikasi mengubahnya menjadi tarif 0 tanpa error. Ayu menulis test yang gagal pada kode lama, lalu
+mengubah kode supaya checkout produk itu ditolak dengan kode 422 dan pesan yang jelas. Pesanan berpajak Rp0 turun dari
+sekitar 70 per run menjadi 0, waktu checkout produk bertarif tidak memburuk (p95 369 lalu 355 ms), dan 448 pesanan lama
+yang terdampak ditemukan dengan satu query untuk diserahkan ke Tim Keuangan.
+
+### Sebelum tiket ada
+
+**Teks asli** (`labs/pk-300/konteks/01-aturan-pajak.md`):
+
+> **Aturan Pemungutan Pajak Transaksi**
+>
+> **Pemilik:** Tim Keuangan · **Berlaku sejak:** 1 Januari 2026
+>
+> 1. Tarif pajak setiap produk ditentukan oleh **layanan pajak** berdasarkan kategori produk. Aplikasi tidak boleh menetapkan, menebak, atau memakai tarif cadangan sendiri.
+> 2. Memungut pajak dengan tarif yang salah, terlalu rendah maupun terlalu tinggi, dikenai denda dan wajib dikoreksi ke pelanggan. Tarif 11% hanya berlaku untuk sebagian kategori.
+> 3. Transaksi yang tarif pajaknya belum tersedia **tidak boleh diselesaikan**. Pelanggan diberi tahu bahwa produk itu belum bisa dibeli, dan keranjangnya tidak boleh hilang.
+> 4. Koreksi pesanan lama dikerjakan Tim Keuangan secara manual. Tim teknis cukup menyerahkan daftar pesanan yang terdampak.
+
+**Teks asli** (`labs/pk-300/konteks/02-thread-tim-pajak.md`):
+
+> **Thread #integrasi-pajak**
+>
+> **Yoga (Tim Integrasi Pajak), 2 Nov 2026, 10.12**
+> Mulai 1 November ada kategori produk baru, misalnya Herbal dan Kosmetik Lokal. Tarifnya masih menunggu penetapan, perkiraan pertengahan Desember.
+>
+> **Yoga, 10.15**
+> Sampai tarif ditetapkan, layanan pajak membalas permintaan untuk produk di kategori itu dengan status 200 dan `"rate": null`. Itu bukan error dari sisi kami; artinya tarifnya memang belum ada.
+>
+> **Lestari (Tim Keuangan), 10.40**
+> Oke. Berarti produk itu belum boleh terjual sampai tarifnya ada, ya.
+>
+> **Yoga, 10.42**
+> Betul. Satu lagi: layanan pajak kadang mengembalikan error 5xx kalau sedang pemeliharaan, biasanya Minggu dini hari, kurang dari 10 menit.
+
+- **Dipikirkan** *(ilustrasi)*. Yoga menulis bahwa `null` "bukan error dari sisi kami" karena ia membayangkan tim aplikasi
+  akan menolak produk itu. Ia tidak bertanya bagaimana aplikasi membaca jawaban kosong, dan tidak ada yang memeriksanya.
+- **Dipertimbangkan** *(ilustrasi)*. Lestari menimbang apakah perlu memblokir produk itu di katalog. Ia memilih tidak,
+  karena menurutnya tim teknis yang akan menangani "belum boleh terjual".
+
+**Teks asli** (`labs/pk-300/konteks/03-rekap-pajak-november.md`):
+
+> **Rekap Pajak 1 sampai 22 November 2026**
+>
+> **Disusun oleh:** Lestari (Tim Keuangan)
+>
+> | Item | Nilai |
+> | --- | --- |
+> | Jumlah pesanan | 812.400 |
+> | Pesanan dengan pajak Rp0 untuk sebagian atau semua produknya | 8.391 |
+> | Pesanan dengan selisih pembulatan Rp1 | 1.204 |
+> | Perkiraan pajak yang tidak terpungut | Rp61,3 juta |
+>
+> Catatan:
+> - Selisih pembulatan Rp1 sudah dikenal sejak 2025 dan diterima auditor. Tidak perlu ditindaklanjuti.
+> - Pesanan dengan pajak Rp0 untuk sebagian atau semua produknya baru muncul pada November. Oktober: nol pesanan.
+
+- **Dipikirkan** *(ilustrasi)*. Lestari menulis catatan "Oktober: nol pesanan" sengaja, karena itu petunjuk paling kuat
+  bahwa sesuatu berubah di awal November.
+
+### Tiket datang
+
+**Teks asli** (`labs/pk-300/LAB.md`):
+
+> **PK-300: Invoice tanpa pajak untuk sebagian produk**
+>
+> > **Lestari, Tim Keuangan (Senin, 09.05):** Rekap pajak November tidak cocok. Ada pesanan yang kolom pajaknya Rp0, padahal produknya kena pajak. Kami belum tahu sejak kapan.
+>
+> > **Bayu, Product Manager (09.20):** Nilainya kecil dibanding total penjualan. Bisa kita abaikan dulu?
+>
+> > **Pak Hendra, Senior Developer (09.35):** Kalau tarifnya kosong, pakai saja 11%. Itu tarif yang paling umum.
+>
+> **Yang diharapkan**
+>
+> - Tidak ada pesanan baru yang tersimpan dengan pajak Rp0 untuk produk yang tarifnya belum tersedia.
+> - Checkout yang ditolak memberi kode status dan pesan yang jelas, dan keranjang pelanggan tidak berubah.
+> - Checkout untuk produk yang tarifnya tersedia tetap berhasil, dengan p95 tidak lebih dari 10% di atas patokan.
+> - Pesanan lama yang terdampak (pajak produk yang tarifnya belum tersedia tercatat Rp0) bisa ditemukan dengan satu query SQL yang dilampirkan di PR.
+
+| Siapa | Isi pesan | Dipikirkan *(ilustrasi)* | Bagaimana Ayu menilainya |
+| --- | --- | --- | --- |
+| Lestari | Pajak Rp0 untuk produk yang kena pajak; belum tahu sejak kapan | Laporan bulanan harus diserahkan ke kantor pajak; ia butuh daftar pesanan, bukan hanya perbaikan | Gejala utama |
+| Bayu | Nilainya kecil, abaikan dulu | Ia membandingkan dengan total penjualan, bukan dengan denda | Dugaan keliru: Rp61,3 juta dan salah pungut didenda |
+| Pak Hendra | Kalau tarif kosong, pakai 11% | Cara tercepat agar angka pajak "terisi" | Solusi titipan: tarif tidak boleh ditebak |
+
+### 09.53 sampai 09.55: Ayu menyiapkan kerja
+
+- **Dilakukan.** Ayu mengambil pembaruan repo induk lewat PR #19 (09.53). Bimo meninjaunya, tetapi menulis bahwa satu
+  pemeriksaan memberi hasil kosong, padahal ada tiga berkas milik tim yang berbeda. Bimo mengoreksi komentarnya secara
+  terbuka. Ayu lalu menulis rencana sesi di Issue #20 (09.54), menulis ulang tiket di Issue #21 (09.55), dan membuka PR #22
+  sebagai draf dengan jurnal berisi tiga prediksi (09.55).
+- **Dipikirkan.** Ayu menulis tiga risiko dengan tandanya, termasuk risiko menyentuh kode yang juga dipakai tiket PK-306.
+- **Prediksi Ayu:** (1) aplikasi mengubah jawaban kosong menjadi tarif 0; (2) menolak checkout akan mengosongkan keranjang;
+  (3) perbaikan tidak memengaruhi waktu checkout produk bertarif.
+- **Sumber.** PR #19, Issue #20, Issue #21, PR #22, commit `de624cf`
+
+### 09.58 sampai 10.11: Ayu mengukur patokan dan membaca kode
+
+- **Dilakukan.** Ayu menjalankan pemanasan dan tiga run patokan, masing-masing didahului `task lab:siapkan`. Di tiga run,
+  72, 67, dan 72 checkout produk tanpa tarif berhasil dengan pajak Rp0, dan jumlah itu sama dengan yang Ayu hitung di
+  database per jendela jam run. Median p95 produk bertarif: 369 ms.
+- **Dilakukan juga.** Ayu membaca jalur kode dan menemukan baris yang mengubah tarif `null` menjadi 0 di `TaxClient`.
+  Prediksi 1 benar. Ayu menulis script yang menanyakan daftar produk tanpa tarif ke layanan pajak (50 dari 5.000 produk)
+  dan query untuk pesanan lama, sambil menunggu run selesai, tanpa menyentuh kode yang sedang diukur.
+- **Dipikirkan.** Ayu sempat memasang label `diagnosis` terlalu cepat, sebelum gejala direproduksi, lalu
+  mengembalikannya ke `triage`.
+- **Sumber.** `labs/pk-300/JURNAL.md` bagian 2 sampai 4, commit `0c77047`
+
+### 10.12 sampai 10.13: Ayu menulis test dulu, baru kode
+
+| Jam | Commit | Dilakukan | Dipikirkan |
+| --- | --- | --- | --- |
+| 10.12 | `d930833` | Ayu menambah `TaxClientTest` (4 test) dan kelas exception yang belum dipakai. Pada kode lama, 3 dari 4 test gagal | Ayu sengaja menambah kelas exception lebih dulu, supaya test gagal karena perilaku, bukan karena kode tidak bisa dikompilasi |
+| 10.13 | `3012ece` | Ayu mengubah `TaxClient` dan `CheckoutController`: tarif kosong ditolak dengan 422. Test yang sama: 4 dari 4 lulus | Dua berkas diubah; jumlah pemanggilan ke layanan pajak sengaja tidak disentuh (bagian tiket PK-306) |
+
+### 10.14 sampai 10.28: Ayu menguji prediksi dan mengukur ulang
+
+- **Prediksi 2 diuji.** Ayu mencoba satu pelanggan dengan produk tanpa tarif: 422, keranjang 1 item sebelum dan sesudah,
+  tidak ada pesanan baru. Prediksi 2 **salah**, karena seluruh checkout berjalan dalam satu transaksi. Ayu tidak perlu
+  menulis kode penyimpan keranjang.
+- **Dilakukan.** Tiga run sesudah perbaikan: pesanan berpajak Rp0 0, 0, 0; median p95 produk bertarif 355 ms (batas 406 ms).
+  Prediksi 3 benar. Ayu menjalankan `task evidence` dari commit `3012ece` dengan pohon kerja bersih (10.27), lalu query
+  pesanan lama: 448 pesanan, dijelaskan sampai habis (166 riwayat, 282 dari run patokan).
+- **Sumber.** `JURNAL.md` bagian Perbaikan, komentar bukti di PR #22
+
+### 10.32: Bimo dan Citra meninjau PR #22
+
+| Siapa | Yang diperiksa | Dipikirkan dan diputuskan |
+| --- | --- | --- |
+| Bimo | Pemanggil lain, test di commit lama dan baru, asal bukti, batasan | Saat pindah ke commit lama, kompilasi gagal karena folder `target/` basi. Bimo menambahkan `rm -rf target` ke langkah pemeriksaan, dan meminta penanganan error 5xx dari layanan pajak dicatat di tindak lanjut |
+| Ayu | | Ayu setuju. 5xx bukan gejala tiket ini, karena saat 5xx checkout sudah gagal, jadi pajak tidak salah pungut |
+| Citra | Target, kebenaran data di database, keranjang, data lama, klaim | Citra menilai klaim sudah dibatasi, dan menyetujui |
+
+- **Dilakukan.** Ayu menggabungkan PR #22 (10.32), menulis komentar penutupan Issue #21 dengan empat tindak lanjut, lalu
+  menulis refleksi dan menutup Issue #20 (10.33).
+- **Dipelajari (dari refleksi Ayu).** Menguji prediksi yang salah sebelum menulis kode menghemat kode yang tidak perlu.
+  Ke depan, setiap PR yang meminta peninjau menjalankan test di commit lama menuliskan `rm -rf target` di langkah pemeriksaan.
+- **Sumber.** Komentar PR #22, Issue #21, Issue #20
+
+### Sesudah penutupan (ilustrasi)
+
+| Siapa | Yang dilakukan | Yang dipelajari |
+| --- | --- | --- |
+| Lestari | Lestari mengoreksi pesanan dari daftar yang diserahkan, lalu melampirkan query-nya di laporan ke kantor pajak | Daftar yang bisa diulang lebih berguna daripada angka yang dihitung sekali |
+| Yoga | Yoga menambahkan kalimat di dokumentasi layanan pajak: "`rate: null` berarti produk belum boleh dijual" | Kesepakatan arti sebuah nilai harus tertulis di kedua sisi |
+| Bayu | Bayu meminta penanda "belum bisa dibeli" di katalog (tindak lanjut 3) | Nilai kecil pun bisa berarti denda besar |
+| Pak Hendra | Pak Hendra meninjau tempat lain di kode yang mengganti nilai kosong dengan angka cadangan | Nilai cadangan yang diam-diam lebih berbahaya daripada error yang terlihat |
+
+---
+
 ## Ringkasan pelajaran
 
 | Pelajaran | Siapa yang menunjukkannya | Kapan |
@@ -499,3 +658,6 @@ catatan nyata di atas.
 | Bandingkan dengan patokan dari hari yang sama, dan batasi klaim | Ayu, Citra | Sabtu 07.53 sampai 07.59 |
 | Masukkan hal yang belum terjelaskan ke tindak lanjut, supaya tidak hilang di jurnal | Bimo | Sabtu 07.59 |
 | Ubah rencana secara terbuka saat keadaan berubah | Ayu | Sabtu 07.47 |
+| Untuk bug data, tulis test yang gagal pada kode lama sebelum mengubah kode | Ayu | Jumat 27 Nov 10.12 |
+| Hitung kebenaran data di database, bukan hanya dari respons | Ayu, Citra | Jumat 27 Nov 10.11 dan 10.28 |
+| Koreksi komentar tinjauan sendiri secara terbuka | Bimo | Jumat 27 Nov 09.53 |
